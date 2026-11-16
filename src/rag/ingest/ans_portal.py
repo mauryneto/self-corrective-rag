@@ -66,6 +66,9 @@ def parse_row_cells(cells: list[str], kind: str) -> PortalRow | None:
     """Cells: Legislação, Data DOU, Ementa, Tema, Assunto, Status, Ações."""
     if len(cells) < 3:
         return None
+    # Belt and braces: the list is filtered to norms in force, but skip anything not "Vigente".
+    if len(cells) >= 6 and cells[5].strip() and cells[5].strip().lower() != "vigente":
+        return None
     title, dou, ementa = (re.sub(r"\s+", " ", c).strip() for c in cells[:3])
     m = _TITLE_RE.search(title)
     if not m or not re.fullmatch(r"\d{2}/\d{2}/\d{4}", dou):
@@ -88,8 +91,9 @@ def parse_norm_page(html: str, url: str) -> PortalText:
         for struck in body.find_all(["s", "strike", "del"]):
             struck.decompose()  # passages replaced or revoked by later norms
         for el in body.find_all(["p", "tr", "li"]):
-            if el.name in ("p", "li") and el.find_parent(["table", "li"]) not in (None, el):
-                continue
+            parents = {par.name for par in el.parents}
+            if el.name in ("p", "li") and ("table" in parents or "li" in parents):
+                continue  # read as part of its table row or list item
             if el.name == "tr":
                 cells = [re.sub(r"\s+", " ", c.get_text(" ", strip=True)) for c in el.find_all(["td", "th"])]
                 text = " | ".join(c for c in cells if c)
@@ -182,7 +186,10 @@ class PortalBrowser:
                 self.list_complete = True
                 break
             first_before = current[0]
-            pg.get_by_label("Go to next page").click()
+            # The grid has pagination controls above and below it; only one is visible.
+            # The pagination buttons sit in a zero-size footer that Playwright treats as hidden, so
+            # the click is dispatched on the element directly, as the page's own handler expects.
+            pg.get_by_label("Go to next page").first.dispatch_event("click")
             pg.wait_for_load_state("networkidle")
             for _ in range(50):  # wait until the grid shows the next page
                 now = self._range()

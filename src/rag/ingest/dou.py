@@ -81,7 +81,7 @@ def parse_article(html: str) -> tuple[str, list[str]]:
     # become one line each, cells separated by " | ".
     for el in body.find_all(["p", "tr"]):
         if el.name == "p":
-            if "d-none" in (el.get("class") or []) or el.find_parent("table") is not None:
+            if "d-none" in (el.get("class") or []) or any(par.name == "table" for par in el.parents):
                 continue
             text = re.sub(r"\s+", " ", el.get_text(" ", strip=True)).strip()
         else:

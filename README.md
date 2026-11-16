@@ -33,6 +33,10 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 - **How it is read:** the portal is a JavaScript app, so a headless browser (Playwright) uses it
   the way a person would: the public list of norms and each norm's public page, one at a time.
 - **Licensing:** official acts are not protected by copyright in Brazil (Lei 9.610/98, art. 8º, IV).
+- **Coverage (Nov 2026):** 240 RNs in force, 4,124 chunks: 234 consolidated texts from the
+  portal and 6 originals from the gazette. 14 norms have no text in either source (mostly from
+  2002–2011); they are listed in `data/corpus/_changes.json` under `failed`. Norms the portal
+  marks "Não vigente" (e.g. published but not yet in effect) are left out.
 - **Known limitation:** annexes published as separate files (e.g. the procedure tables of RN 465)
   are not parsed yet; the articles that reference them are.
 

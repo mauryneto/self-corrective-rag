@@ -89,7 +89,7 @@ def main() -> None:
                 article = None
                 try:
                     article = dou.find(ref)
-                except httpx.HTTPError as exc:
+                except Exception as exc:  # noqa: BLE001 - the fallback must never stop the run
                     print(f"[{n}] {row.doc_id}: DOU error {exc!r}")
                 if article is None:
                     print(f"[{n}] {row.doc_id}: no text on the portal nor in the DOU")
@@ -118,7 +118,8 @@ def main() -> None:
         print(f"{doc_id}: no longer in force, removed")
 
     changes = {"date": date.today().isoformat(), "kind": args.kind, "in_force": len(in_force),
-               "changed": changed, "removed": removed, "unchanged": len(unchanged), "failed": failed}
+               "changed": changed, "removed": removed, "unchanged": len(unchanged),
+               "failed": list(dict.fromkeys(failed))}
     _write(out_dir / "_changes.json", changes)
     print(f"done: {len(in_force)} in force | {len(changed)} new/updated | {len(unchanged)} unchanged | "
           f"{len(removed)} removed | {len(failed)} without text")

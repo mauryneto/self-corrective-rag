@@ -40,6 +40,8 @@ def test_portal_row_cells():
                            "Altera a RN 465.", "Tema", "Assunto", "Vigente", ""], "RN")
     assert row.number == 683 and row.dou_date == date(2026, 11, 16) and row.doc_id == "rn-683"
     assert parse_row_cells(["Legislação", "Data DOU", "Ementa"], "RN") is None  # header row
+    not_in_force = ["Resolução Normativa - RN ANS nº 600, de 1 março 2024", "02/03/2024", "X.", "", "", "Não vigente", ""]
+    assert parse_row_cells(not_in_force, "RN") is None
 
 
 def test_revoked_norms_are_removed_only_after_a_complete_crawl():
