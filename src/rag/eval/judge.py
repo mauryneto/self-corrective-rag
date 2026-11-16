@@ -20,6 +20,7 @@ import subprocess
 import tempfile
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
@@ -63,14 +64,16 @@ não houver citações.
 Seja rigoroso e consistente."""
 
 
-def judge_prompt(question: str, reference: str, answerable: bool, answer: str, cited_texts: list[str]) -> str:
-    cited = "\n\n".join(f"[{i}] {t}" for i, t in enumerate(cited_texts, 1)) or "(nenhum trecho citado)"
+def judge_prompt(question: str, reference: str, answerable: bool, answer: str, cited: dict[int, str]) -> str:
+    """``cited`` maps the source numbers used in the answer ([1], [3], ...) to their texts, so the
+    judge sees the same numbering as the answer."""
+    cited_block = "\n\n".join(f"[{i}] {t}" for i, t in sorted(cited.items())) or "(nenhum trecho citado)"
     return (
         f"Pergunta: {question}\n\n"
         f"Tem resposta na base de normas: {'sim' if answerable else 'NÃO'}\n\n"
         f"Resposta de referência: {reference}\n\n"
         f"Resposta do sistema:\n{answer}\n\n"
-        f"Trechos citados pelo sistema:\n{cited}"
+        f"Trechos citados pelo sistema:\n{cited_block}"
     )
 
 
@@ -84,13 +87,31 @@ class JudgeBackend(Protocol):
     def grade(self, prompt: str) -> tuple[Verdict, CallRecord]: ...
 
 
+def find_claude_executable() -> str:
+    """Locate the Claude Code binary.
+
+    On Windows, an npm install puts a ``claude.cmd`` shim on the PATH. Arguments passed through a
+    .cmd go through cmd.exe, which cuts them at the first line break, so the multi-line judge prompt
+    and the JSON schema would arrive truncated. The shim only forwards to a real ``claude.exe``
+    inside the package, so we call that directly. ``CLAUDE_BIN`` overrides the lookup.
+    """
+    if os.environ.get("CLAUDE_BIN"):
+        return os.environ["CLAUDE_BIN"]
+    found = shutil.which("claude")
+    if found and Path(found).suffix.lower() in (".cmd", ".bat"):
+        real = Path(found).parent / "node_modules" / "@anthropic-ai" / "claude-code" / "bin" / "claude.exe"
+        if real.exists():
+            return str(real)
+    return found or "claude"
+
+
 class ClaudeCodeJudge:
     """``claude -p`` headless: no tools, no MCP servers, no session saved, structured JSON output."""
 
     def __init__(self, model: str = DEFAULT_JUDGE_MODEL, timeout_s: int = 180, executable: str | None = None):
         self.model = model
         self.timeout_s = timeout_s
-        self.executable = executable or shutil.which("claude") or "claude"
+        self.executable = executable or find_claude_executable()
 
     def command(self) -> list[str]:
         return [
@@ -173,8 +194,8 @@ def get_judge(backend: str = "claude-code", model: str = DEFAULT_JUDGE_MODEL) ->
 
 
 def grade(judge: JudgeBackend, question: str, reference: str, answerable: bool, answer: str,
-          cited_texts: list[str], retries: int = 2) -> JudgedAnswer:
-    prompt = judge_prompt(question, reference, answerable, answer, cited_texts)
+          cited: dict[int, str], retries: int = 2) -> JudgedAnswer:
+    prompt = judge_prompt(question, reference, answerable, answer, cited)
     last: Exception | None = None
     for _ in range(retries + 1):
         try:

@@ -21,9 +21,14 @@ class FakeProc:
 
 
 def test_prompt_marks_unanswerable_questions():
-    p = judge_prompt("Q?", "Não há norma sobre isso.", False, "Não sei.", [])
+    p = judge_prompt("Q?", "Não há norma sobre isso.", False, "Não sei.", {})
     assert "Tem resposta na base de normas: NÃO" in p
     assert "(nenhum trecho citado)" in p
+
+
+def test_prompt_keeps_the_answer_source_numbers():
+    p = judge_prompt("Q?", "R", True, "Prazo de 7 dias [3].", {3: "RN 566 — Art. 3 ..."})
+    assert "[3] RN 566 — Art. 3" in p and "[1]" not in p
 
 
 def test_claude_code_command_gives_the_judge_no_tools_and_no_mcp():
@@ -73,5 +78,5 @@ def test_grade_retries_then_succeeds():
                 judge_mod.CallRecord("judge", "m", 1, 1, 0.1)
 
     j = Flaky()
-    result = grade(j, "Q", "R", True, "A", [])
+    result = grade(j, "Q", "R", True, "A", {})
     assert result.verdict.verdict == "partial" and j.n == 2
