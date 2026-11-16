@@ -88,8 +88,13 @@ def parse_norm_page(html: str, url: str) -> PortalText:
     body = max(viewers, key=lambda v: len(v.get_text()), default=None)
     paragraphs: list[str] = []
     if body is not None:
-        for struck in body.find_all(["s", "strike", "del"]):
-            struck.decompose()  # passages replaced or revoked by later norms
+        # Passages replaced or revoked by later norms: <s>/<strike>/<del>, or (older texts) a
+        # line-through style.
+        struck_els = body.find_all(["s", "strike", "del"]) + body.find_all(
+            style=lambda st: bool(st) and "line-through" in st.replace(" ", "").lower())
+        for struck in struck_els:
+            if not struck.decomposed:
+                struck.decompose()
         for el in body.find_all(["p", "tr", "li"]):
             parents = {par.name for par in el.parents}
             if el.name in ("p", "li") and ("table" in parents or "li" in parents):

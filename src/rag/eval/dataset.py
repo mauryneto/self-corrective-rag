@@ -23,6 +23,10 @@ QuestionType = Literal["direct", "multi_hop", "unanswerable", "out_of_scope"]
 class GoldSource(BaseModel):
     doc: str  # e.g. "rn-566"
     unit: str  # e.g. "Art. 3"
+    # Verbatim excerpt of that article supporting the reference answer. `rag.eval.check_questions`
+    # verifies it really is in the norm, so reviewing a question means comparing the answer with
+    # this quote, no domain knowledge required.
+    evidence: str = ""
 
     def matches(self, doc_id: str, unit: str) -> bool:
         return doc_id == self.doc and (unit == self.unit or unit.startswith(self.unit + " (parte"))
@@ -34,6 +38,9 @@ class Question(BaseModel):
     question: str
     reference_answer: str
     gold: list[GoldSource] = Field(default_factory=list)
+    # For unanswerable questions: terms the checker searches the corpus for, to flag any norm that
+    # might answer the question after all.
+    absence_terms: list[str] = Field(default_factory=list)
     status: Literal["draft", "reviewed"] = "draft"
     notes: str = ""
 

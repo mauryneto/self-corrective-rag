@@ -100,3 +100,17 @@ def test_header_says_when_a_consolidated_text_was_updated():
     doc = make_doc(BASIC) | {"updated": "2026-11-03"}
     header = chunk_document(doc)[1].text.splitlines()[0]
     assert header == "RN nº 999 (DOU 20/07/2026, texto atualizado em 03/11/2026) — Art. 1"
+
+
+def test_articles_merged_in_one_paragraph_are_split():
+    chunks = chunk_document(make_doc([
+        "A Diretoria Colegiada adota a seguinte Resolução Normativa: Art. 1º Fica vedado X.",
+        "Art. 10. Prazo de 30 dias. Art. 11. O ex-empregado poderá optar. Art. 12. Vigência imediata.",
+    ]))
+    assert [c.unit for c in chunks] == ["Ementa", "Art. 1", "Art. 10", "Art. 11", "Art. 12"]
+    assert "Fica vedado X." in chunks[1].text
+
+
+def test_in_text_references_do_not_split():
+    chunks = chunk_document(make_doc(["Art. 2º Aplica-se o disposto no art. 5º desta norma; ver Art. 7º-A do anexo."]))
+    assert [c.unit for c in chunks] == ["Ementa", "Art. 2"]

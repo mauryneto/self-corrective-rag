@@ -49,8 +49,21 @@ def _is_signature_name(p: str) -> bool:
     return len(p) < 60 and p.isupper() and not ARTICLE_RE.match(p) and not ANNEX_RE.match(p)
 
 
+# Some source paragraphs hold several articles (line breaks inside one <p> on the portal), e.g.
+# "... 30 dias. Art. 11. O ex-empregado ...". Split right before an "Art. N" that follows the end
+# of a sentence or clause and starts a new provision. Lowercase in-text references ("o art. 5º")
+# and quoted amendments ('"Art. 5º ...') are left alone.
+ARTICLE_BOUNDARY_RE = re.compile(
+    r"(?<=[.;:!?)])\s+(?=Art\.?\s*\d+\s*[º°o]?\.?(?:-[A-Z])?\s+[A-ZÀ-Ý])"
+)
+
+
+def _split_articles(paragraph: str) -> list[str]:
+    return [part.strip() for part in ARTICLE_BOUNDARY_RE.split(paragraph) if part.strip()]
+
+
 def _clean_paragraphs(paragraphs: list[str]) -> list[str]:
-    out = [p.strip() for p in paragraphs if p.strip() and not FILLER_RE.match(p)]
+    out = [part for p in paragraphs if p.strip() and not FILLER_RE.match(p) for part in _split_articles(p.strip())]
     # Drop the signature block: an all-caps name followed by the signer's role.
     keep = [True] * len(out)
     for i, p in enumerate(out):

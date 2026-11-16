@@ -75,6 +75,34 @@ curl -s localhost:8000/ask -H "content-type: application/json" \
 To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
 `ANTHROPIC_API_KEY` in `.env`.
 
+## Eval set
+
+`eval/questions.jsonl`: 180 questions in Portuguese, fixed and versioned.
+
+| Type | Count | What it tests |
+|---|---|---|
+| direct | 80 | one article answers it |
+| multi_hop | 40 | the answer combines two or more articles, often from different norms |
+| unanswerable | 40 | sounds like ANS regulation, but the corpus does not answer it: the system must say so |
+| out_of_scope | 20 | not ANS regulation at all: the system must decline |
+
+- **How it was written:** drafted by Claude from the corpus text, following
+  [`eval/question_brief.md`](eval/question_brief.md). Every reference answer carries a verbatim
+  quote of the article that supports it.
+- **How it is checked:** `python -m rag.eval.check_questions` verifies, mechanically, that every
+  gold norm and article exists and every quote is word for word in that article; for unanswerable
+  questions it searches the corpus for the key terms. `python -m rag.eval.review_sheet` writes
+  `eval/review.md`, with each question next to its quote, for human review.
+- **Gold sources are (norm, article) pairs**, not chunk ids, so they survive changes to chunking.
+
+## Judge
+
+`rag.eval.judge` grades each answer as correct / partial / incorrect, plus whether the system
+declined and whether its citations support it. Same prompt and JSON schema on two backends:
+Claude Code headless (`claude -p`, no tools, no MCP servers) or the Anthropic API. The default
+model is Claude Haiku 5.5. The judge is separate from anything inside the pipeline, and is
+validated against human labels before its grades are trusted.
+
 ## Design decisions
 
 - **Structural chunking.** Chunks follow the legal structure (one article, split at paragraph

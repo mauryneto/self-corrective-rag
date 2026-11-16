@@ -130,3 +130,10 @@ def test_parse_article_keeps_order_and_table_rows():
     assert title == "RESOLUÇÃO NORMATIVA ANS Nº 679"
     assert paragraphs == ["RESOLUÇÃO NORMATIVA ANS Nº 679", "Altera a RN 465.", "Art. 1º Texto.",
                           "Código | Procedimento", "Art. 2º Vigência."]
+
+
+def test_portal_page_drops_line_through_styled_passages():
+    html = """<div>Publicado em 01/01/2005 | Atualizado em 02/02/2010</div>
+    <div class="wgt-CKEditorViewerForMendixNode"><p>Art. 1º Texto em vigor.</p>
+    <p><span style="text-decoration: line-through">Art. 2º Redação antiga.</span></p><p>Art. 2º Redação nova.</p></div>"""
+    assert parse_norm_page(html, "u").paragraphs == ["Art. 1º Texto em vigor.", "Art. 2º Redação nova."]
