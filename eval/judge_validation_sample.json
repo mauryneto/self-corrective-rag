@@ -1,0 +1,653 @@
+[
+ {
+  "id": "q050",
+  "type": "direct",
+  "question": "Quero reclamar na ouvidoria da operadora, mas perdi o número de protocolo do atendimento que fiz no SAC. Posso registrar a reclamação mesmo assim?",
+  "reference": "Sim. A falta do número de protocolo ou de registro da manifestação no SAC não impede o acesso do beneficiário à Ouvidoria (RN 323, art. 1º, §3º).",
+  "evidence": [
+   {
+    "source": "RN-323, Art. 1",
+    "quote": "A falta do número de protocolo da reclamação ou a falta do número de registro da manifestação junto ao Serviço de Atendimento ao Cliente, ou à unidade organizacional equivalente, não impedirá o acesso do beneficiário à Ouvidoria."
+   }
+  ],
+  "answer": "Sim, você pode registrar a reclamação mesmo sem o número de protocolo. Caso não seja possível apresentar o número de protocolo, a ANS indaga que o beneficiário apresente elementos mínimos, tais como a data e hora da ligação ou outra forma de comunicação com o canal de atendimento da operadora [5]. Isso garante que você ainda possa proceder com a reclamação mesmo sem o número específico de protocolo."
+ },
+ {
+  "id": "q039",
+  "type": "direct",
+  "question": "Sou médico credenciado. A operadora pode colocar no contrato uma cláusula exigindo que eu atenda com exclusividade os clientes dela?",
+  "reference": "Não. É vedado exigir exclusividade na relação contratual entre operadora e prestador (RN 503, art. 5º, III).",
+  "evidence": [
+   {
+    "source": "RN-503, Art. 5",
+    "quote": "exigir exclusividade na relação contratual; IV - restringir, por qualquer meio, a liberdade do exercício de atividade profissional do Prestador"
+   }
+  ],
+  "answer": "A operadora não pode exigir que você atenda com exclusividade os clientes dela, pois não há menção a essa exigência em nenhum dos trechos fornecidos. No entanto, é importante consultar a legislação completa e atualizada da ANS para garantir que não há restrições ou práticas específicas que não foram mencionadas nos trechos fornecidos. [1][2][3][4][5][6]"
+ },
+ {
+  "id": "q021",
+  "type": "direct",
+  "question": "Uma operadora com mais de 100 mil beneficiários é obrigada a mostrar a rede credenciada em mapa no site?",
+  "reference": "Sim. Deve oferecer a opção de visualizar a rede por imagens ou mapas que indiquem a localização geográfica individualizada dos prestadores (mapeamento gráfico dinâmico) (RN 486, art. 4º).",
+  "evidence": [
+   {
+    "source": "RN-486, Art. 4",
+    "quote": "deverão oferecer a opção de visualização de sua rede assistencial por meio de imagens ou mapas que indiquem a localização espacial geográfica individualizada dos prestadores de serviços de saúde"
+   }
+  ],
+  "answer": "Sim, de acordo com o Art. 4º da Resolução Normativa nº 486, as operadoras de planos privados de assistência à saúde com número igual ou superior a 100.000 (cem mil) beneficiários devem oferecer a opção de visualização de sua rede assistencial por meio de imagens ou mapas que indiquem a localização espacial geográfica individualizada dos prestadores de serviços de saúde (mapeamento gráfico dinâmico) [2]."
+ },
+ {
+  "id": "q138",
+  "type": "unanswerable",
+  "question": "A ANS vai passar a limitar o reajuste dos planos coletivos por adesão a partir de 2027?",
+  "reference": "As normas do corpus não contêm regras futuras de limitação do reajuste de planos coletivos; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Com base nos trechos fornecidos, não há menção explícita de que a ANS planeje limitar o reajuste dos planos coletivos por adesão a partir de 2027. Os trechos abordam critérios e obrigações para aplicação de reajustes, mas não indicam uma data específica de 2027 para limitações adicionais. Portanto, não é possível afirmar que a ANS vai limitar o reajuste dos planos coletivos por adesão a partir de 2027 com base apenas nessas informações. [1][2][3]"
+ },
+ {
+  "id": "q094",
+  "type": "multi_hop",
+  "question": "Tenho um plano individual com coparticipação. No reajuste anual, a coparticipação pode subir mais que a mensalidade? E se fosse um plano só odontológico?",
+  "reference": "Não. Nos planos individuais médico-hospitalares, franquias e coparticipações não podem ser reajustadas em percentual superior ao autorizado pela ANS para a mensalidade (RN 565, art. 8º, parágrafo único); nos individuais exclusivamente odontológicos, não podem superar o percentual aplicado à mensalidade (RN 565, art. 21).",
+  "evidence": [
+   {
+    "source": "RN-565, Art. 8",
+    "quote": "Os valores relativos às franquias ou coparticipações não poderão sofrer reajuste em percentual superior ao autorizado pela ANS para a contraprestação pecuniária."
+   },
+   {
+    "source": "RN-565, Art. 21",
+    "quote": "os valores relativos às franquias ou coparticipações não poderão sofrer reajuste em percentual superior ao aplicado à contraprestação pecuniária"
+   }
+  ],
+  "answer": "Para um plano individual com coparticipação, não há restrição específica que impeça a coparticipação de subir mais que a mensalidade no reajuste anual [1][3]. No entanto, para planos individuais ou familiares exclusivamente odontológicos, os valores relativos às franquias ou coparticipações não podem sofrer reajuste em percentual superior ao aplicado à mensalidade [1]. Portanto, em um plano odontológico exclusivo, a coparticipação não pode subir mais que a mensalidade no reajuste anual [1]."
+ },
+ {
+  "id": "q082",
+  "type": "direct",
+  "question": "Para a ANS, quando uma operadora é considerada reincidente na hora de aplicar penalidades?",
+  "reference": "Quando comete nova infração do mesmo tipo de outra já punida por decisão transitada em julgado, desde que entre o trânsito em julgado e a nova infração não tenham se passado mais de dois anos (RN 489, art. 17, caput e § 1º).",
+  "evidence": [
+   {
+    "source": "RN-489, Art. 17",
+    "quote": "Verifica-se a reincidência quando o agente regulado comete nova infração de mesmo tipo da infração anteriormente punida, cuja decisão tenha transitado em julgado."
+   },
+   {
+    "source": "RN-489, Art. 17",
+    "quote": "entre a data do trânsito em julgado e a data da prática da infração posterior, houver decorrido período de tempo não superior a dois anos."
+   }
+  ],
+  "answer": "De acordo com o trecho [3], a reincidência de notificações para correção de desconformidades, com base em desconformidades reiteradas, considerando os últimos dois exercícios, é considerada como um agravante da situação da Operadora para fins de enquadramento em uma das situações descritas na regulamentação [2]. Isso significa que a ANS considera uma operadora reincidente quando há notificações repetidas de desconformidades nos últimos dois exercícios financeiros.\n\nAlém disso, o artigo 2º da RN nº 659 [3] acrescenta que, na hipótese de o infrator ser reincidente conforme definido no artigo 17, a ANS poderá aplicar uma sanção mais grave, deixando de aplicar a pena de advertência. Isso indica que a reincidência é um fator importante na determinação da gravidade da penalidade a ser aplicada. No entanto, o trecho não fornece detalhes específicos sobre o que constitui \"reincidente\" no artigo 17, o que não pode ser inferido apenas com base nos trechos fornecidos."
+ },
+ {
+  "id": "q086",
+  "type": "multi_hop",
+  "question": "Fiz a portabilidade de carências para um plano novo. O que eu preciso fazer com o plano antigo, e até quando tenho que continuar pagando a mensalidade dele?",
+  "reference": "Deve pedir o cancelamento do vínculo com o plano de origem em até 5 dias a partir do início da vigência do plano de destino (RN 438, art. 18), e deve pagar regularmente a mensalidade do plano de origem até que o vínculo seja extinto, com cobrança pro rata da última mensalidade ou devolução do que for pago a maior (RN 438, art. 19).",
+  "evidence": [
+   {
+    "source": "RN-438, Art. 18",
+    "quote": "o beneficiário deverá solicitar o cancelamento do seu vínculo com o plano de origem no prazo de 5 (cinco) dias a partir da data do início da vigência do seu vínculo com o plano de destino"
+   },
+   {
+    "source": "RN-438, Art. 19",
+    "quote": "Até que o vínculo contratual do plano de origem seja extinto, o beneficiário deverá pagar regularmente a sua mensalidade."
+   }
+  ],
+  "answer": "Ao realizar a portabilidade de carências, você continua vinculado ao plano de origem até que todas as condições estabelecidas na regulamentação sejam cumpridas. Isso significa que você deve manter o vínculo e o adimplemento com o plano de origem conforme os requisitos estabelecidos [1]. Portanto, você deve continuar pagando a mensalidade do plano antigo enquanto estiver em processo de portabilidade e até que a operadora do novo plano (plano de destino) confirme a efetivação da portabilidade.\n\nA efetivação da portabilidade de carências depende da comprovação de que você atendeu a todos os requisitos estabelecidos, incluindo o cumprimento do prazo de permanência no plano de origem e a adimplência [1][2]. Após a confirmação da portabilidade pelo plano de destino, o vínculo com o plano de origem é encerrado.\n\nEm resumo, você deve continuar pagando a mensalidade do plano antigo até que a portabilidade seja efetivamente concluída pelo plano de destino. [1][2]"
+ },
+ {
+  "id": "q003",
+  "type": "direct",
+  "question": "Se não houver prestador da rede credenciada no meu município, o que a operadora deve fazer?",
+  "reference": "Garantir o atendimento em prestador não integrante da rede no mesmo município ou em prestador integrante ou não da rede nos municípios limítrofes, pagando diretamente o prestador não credenciado mediante acordo entre as partes; se também não houver prestador nos municípios limítrofes, deve garantir o transporte de ida e volta até um prestador apto, respeitando os prazos do art. 3º (RN 566, art. 4º).",
+  "evidence": [
+   {
+    "source": "RN-566, Art. 4",
+    "quote": "a operadora deverá garantir o transporte do beneficiário até um prestador apto a realizar o devido atendimento, assim como seu retorno à localidade de origem"
+   }
+  ],
+  "answer": "Se não houver prestador da rede credenciada no seu município, a operadora deve garantir o atendimento em um prestador nos municípios limítrofes ou na região de saúde à qual seu município pertence [1][2][4][5]. Se não houver prestadores nessas áreas, a operadora deve garantir o transporte do beneficiário até um prestador apto a realizar o atendimento, bem como seu retorno à localidade de origem [1][2][3]."
+ },
+ {
+  "id": "q068",
+  "type": "direct",
+  "question": "Liguei para a central do meu plano para pedir autorização de uma cirurgia. A operadora tem que me passar um número de protocolo? Em que momento do atendimento?",
+  "reference": "Sim. Em qualquer solicitação, por qualquer canal, a operadora deve fornecer o número de protocolo como primeira ação, logo no início do atendimento (RN 623, art. 10).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 10",
+    "quote": "independente do canal pelo qual seja realizado ou qual seja sua finalidade, deverá ser fornecido número de protocolo como primeira ação, no início do atendimento."
+   }
+  ],
+  "answer": "Sim, a operadora deve fornecer um número de protocolo quando você solicita autorização para uma cirurgia. De acordo com o Art. 10 da RN nº 623 [1], sempre que houver a apresentação de solicitação de procedimento ou serviço de cobertura assistencial, a operadora deve fornecer um número de protocolo como primeira ação, no início do atendimento. Portanto, o número de protocolo deve ser fornecido logo no início da sua ligação para a central de atendimento."
+ },
+ {
+  "id": "q007",
+  "type": "multi_hop",
+  "question": "Pedi autorização para uma internação eletiva. Em quanto tempo a operadora tem que me responder e em quanto tempo tem que garantir a internação?",
+  "reference": "A resposta à solicitação deve vir em até 10 dias úteis a partir da solicitação (RN 623, art. 12, II, b), e a internação eletiva deve ser garantida em até 21 dias úteis (RN 566, art. 3º, XIII). O prazo de resposta não se confunde com o prazo de realização (RN 623, art. 12, § 4º).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 12",
+    "quote": "nas solicitações de procedimentos de alta complexidade – PAC – ou de atendimento em regime de internação eletiva, a operadora demandada terá o prazo de até dez dias úteis"
+   },
+   {
+    "source": "RN-566, Art. 3",
+    "quote": "atendimento em regime de internação eletiva: em até 21 (vinte e um) dias úteis"
+   }
+  ],
+  "answer": "De acordo com a Resolução Normativa nº 623, a operadora deve responder à solicitação de internação eletiva em até dez dias úteis a partir da data da solicitação [2]. Se a resposta for aprovando o procedimento, a internação eletiva deve ocorrer em até 21 dias úteis, conforme estabelecido na Resolução Normativa nº 259, com alterações da RN nº 555 [6]."
+ },
+ {
+  "id": "q038",
+  "type": "direct",
+  "question": "Para fazer a migração preciso da data em que entrei no plano antigo e do número dele no SCPA. Em quanto tempo a operadora tem que me passar essas informações?",
+  "reference": "Em até 10 dias, quando solicitadas por qualquer dos canais de atendimento da operadora (RN 562, art. 19, § 3º).",
+  "evidence": [
+   {
+    "source": "RN-562, Art. 19",
+    "quote": "quando solicitada por meio de quaisquer de seus canais de atendimento, no prazo de 10 (dez) dias"
+   }
+  ],
+  "answer": "De acordo com o artigo 19, § 3º, da Resolução Normativa nº 562, a operadora deve fornecer as informações referentes ao contrato de origem, incluindo a data de vinculação ao plano e o número do plano no sistema de cadastro de planos antigos (SCPA), no prazo de 10 (dez) dias, quando solicitada por meio de quaisquer de seus canais de atendimento. [3]"
+ },
+ {
+  "id": "q091",
+  "type": "multi_hop",
+  "question": "Estou internado num hospital da rede do meu plano e quero ser transferido para um hospital particular que não é credenciado. O plano é obrigado a fazer essa remoção?",
+  "reference": "Em regra, não: a remoção de hospital da rede para hospital privado não credenciado, não referenciado e não pertencente à rede própria não é obrigatória (RN 490, art. 3º, II), salvo se o contrato, ou termo apartado de cobertura adicional, previr cláusulas mais amplas (RN 490, art. 4º).",
+  "evidence": [
+   {
+    "source": "RN-490, Art. 3",
+    "quote": "A remoção de beneficiários que possuam planos privados de assistência à saúde com segmentação hospitalar, que já tenham cumprido o período de carência não será obrigatória nas seguintes hipóteses"
+   },
+   {
+    "source": "RN-490, Art. 4",
+    "quote": "Os contratos de planos privados de assistência à saúde podem conter cláusulas mais amplas do que as estabelecidas no art. 2º, abrangendo, inclusive, as hipóteses contidas no art. 3º."
+   }
+  ],
+  "answer": "De acordo com o Art. 3°, inciso II da RN nº 490 [2], a remoção de beneficiários que possuam planos privados de assistência à saúde com segmentação hospitalar, que já tenham cumprido o período de carência, não é obrigatória quando o beneficiário está internado em um hospital cooperado, referenciado, credenciado, ou da rede própria da operadora, e deseja ser transferido para um hospital particular que não é credenciado ao plano de saúde. Portanto, o plano não é obrigado a realizar essa remoção."
+ },
+ {
+  "id": "q101",
+  "type": "multi_hop",
+  "question": "Que desconto a operadora tem se pagar à vista a multa da ANS antes de se defender do auto de infração? E se pagar só depois da decisão de primeira instância?",
+  "reference": "Se, no prazo de 10 dias da intimação, requerer o pagamento antecipado e à vista em vez de apresentar defesa, o desconto é de 40% (RN 483, art. 33, § 1º). Se o fizer após a decisão, no prazo do recurso e em substituição a ele, o desconto é de 20% (RN 483, art. 41).",
+  "evidence": [
+   {
+    "source": "RN-483, Art. 33",
+    "quote": "o interessado fará jus a um desconto percentual de 40% (quarenta por cento) sobre o valor da multa correspondente à infração administrativa apurada no auto de infração ou na representação lavrados"
+   },
+   {
+    "source": "RN-483, Art. 41",
+    "quote": "pode a operadora, querendo, apresentar requerimento de pagamento antecipado e à vista do valor da multa pecuniária fixada na decisão proferida, hipótese em que fará jus a um desconto percentual de 20%"
+   }
+  ],
+  "answer": "Se a operadora optar por pagar à vista a multa antes de se defender do auto de infração, ela tem direito a um desconto de 40% sobre o valor da multa correspondente à infração administrativa apurada [1]. Se a operadora atender aos critérios de meta de Excelência do Índice Geral de Reajuste (IGR) trimestral, o desconto aumenta para 80% [1][5].\n\nSe a operadora pagar à vista a multa após a decisão de primeira instância, mas ainda pendente de reconsideração ou decisão de segunda instância, o desconto será de 40% sobre o valor da multa aplicada pela última decisão condenatória proferida no processo [2]."
+ },
+ {
+  "id": "q098",
+  "type": "multi_hop",
+  "question": "Meu plano individual pode ser reajustado duas vezes no mesmo ano? E por quanto tempo vale o índice máximo de reajuste divulgado pela ANS?",
+  "reference": "Nenhum contrato pode receber reajuste em periodicidade inferior a 12 meses, considerando-se reajuste qualquer variação positiva, inclusive revisão ou reequilíbrio (RN 557, art. 25); essa regra não se aplica às variações por mudança de faixa etária, migração ou adaptação (RN 557, art. 28). O índice máximo (IRPI) é divulgado uma vez por ano e tem vigência de 12 meses (RN 441, art. 9º).",
+  "evidence": [
+   {
+    "source": "RN-557, Art. 25",
+    "quote": "Nenhum contrato poderá receber reajuste em periodicidade inferior a doze meses, ressalvado o disposto no caput do artigo 28 desta resolução."
+   },
+   {
+    "source": "RN-557, Art. 28",
+    "quote": "não se aplica às variações do valor da contraprestação pecuniária em razão de mudança de faixa etária, migração e adaptação de contrato"
+   },
+   {
+    "source": "RN-441, Art. 9",
+    "quote": "O IRPI será divulgado uma vez por ano e terá vigência de 12 meses"
+   }
+  ],
+  "answer": "De acordo com o trecho fornecido, não há menção explícita sobre a possibilidade de reajustes serem aplicados duas vezes no mesmo ano para planos individuais. Portanto, não é possível afirmar se um plano individual pode ser reajustado duas vezes no mesmo ano com base apenas nessas normas [1][2][3][4][5][6].\n\nO índice de reajuste máximo autorizado pela ANS, conforme mencionado no artigo 8º da RN nº 565, é publicado no Diário Oficial da União e no site da ANS. No entanto, o trecho não especifica o período de validade desse índice máximo. Geralmente, esses índices são anuais, mas isso não é confirmado pelos trechos fornecidos [4]."
+ },
+ {
+  "id": "q164",
+  "type": "out_of_scope",
+  "question": "Qual o melhor remédio para baixar febre de uma criança de 2 anos?",
+  "reference": "A pergunta trata de orientação médica sobre medicamentos, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações sobre medicamentos específicos para tratar febre em crianças. Portanto, não é possível responder à pergunta com base apenas nos dados apresentados."
+ },
+ {
+  "id": "q163",
+  "type": "out_of_scope",
+  "question": "Qual a alíquota de ISS para uma clínica médica em São Paulo?",
+  "reference": "A pergunta trata de tributação municipal (ISS), assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações sobre a alíquota de ISS (Imposto Sobre Serviços) para clínicas médicas em São Paulo. Para responder a essa pergunta, seria necessário consultar legislação específica sobre ISS, que não está incluída nos trechos apresentados. [1][2][3][4][5][6]"
+ },
+ {
+  "id": "q145",
+  "type": "unanswerable",
+  "question": "Por quanto tempo o hospital credenciado precisa guardar o prontuário do paciente?",
+  "reference": "As normas do corpus não contêm o prazo de guarda do prontuário; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não especificam um período de guarda obrigatório para o prontuário do paciente pelo hospital credenciado. A informação fornecida aborda principalmente a responsabilidade das operadoras de planos de saúde em guardar documentos e informações, mas não menciona diretamente o prazo de guarda do prontuário médico pelo hospital. [1][2][3][4][5][6]"
+ },
+ {
+  "id": "q095",
+  "type": "multi_hop",
+  "question": "O que é uma \"região de saúde\" para fins de garantia de atendimento e como sei quais municípios fazem parte de cada uma?",
+  "reference": "Região de saúde é um espaço geográfico contínuo formado por agrupamentos de municípios limítrofes, delimitado a partir de identidades culturais, econômicas e sociais e de redes de comunicação e infraestrutura de transportes compartilhadas (RN 566, art. 1º, § 1º, V). As regiões foram instituídas pela RN 665, com os municípios indicados em seu Anexo, e coincidem com as Regionais de Saúde instituídas por cada Unidade Federativa (RN 665, art. 1º).",
+  "evidence": [
+   {
+    "source": "RN-566, Art. 1",
+    "quote": "região de saúde: espaço geográfico contínuo constituído por agrupamentos de Municípios limítrofes, delimitado a partir de identidades culturais, econômicas e sociais"
+   },
+   {
+    "source": "RN-665, Art. 1",
+    "quote": "As Regiões de Saúde dispostas nesta Resolução Normativa coincidem com as Regionais de Saúde instituídas por cada Unidade Federativa"
+   }
+  ],
+  "answer": "Para fins de garantia de atendimento, a \"região de saúde\" é um espaço geográfico contínuo formado por agrupamentos de municípios limítrofes, com base em identidades culturais, econômicas e sociais, e redes de comunicação e infraestrutura de transportes compartilhados, com o objetivo de integrar a organização, planejamento e execução de ações e serviços de saúde [1][4]. As regiões de saúde são definidas e divulgadas por meio de resoluções normativas da ANS, que podem ser consultadas no site da agência no endereço https://www.gov.br/ans/pt-br [5]."
+ },
+ {
+  "id": "q020",
+  "type": "direct",
+  "question": "Ainda não sou cliente, mas quero consultar a rede credenciada de uma operadora antes de contratar. Ela pode liberar a consulta da rede no site só para quem já é beneficiário?",
+  "reference": "Não. É vedado à operadora condicionar o acesso às informações de sua rede assistencial somente aos seus beneficiários (RN 486, art. 2º, §3º).",
+  "evidence": [
+   {
+    "source": "RN-486, Art. 2",
+    "quote": "É vedado às operadoras de planos privados de assistência à saúde condicionar o acesso às informações de sua rede assistencial somente aos seus beneficiários."
+   }
+  ],
+  "answer": "Não, a operadora não pode condicionar o acesso às informações da sua rede credenciada apenas para beneficiários. De acordo com o § 3º do artigo 2 da Resolução Normativa nº 486, é vedado às operadoras condicionar o acesso às informações de sua rede assistencial somente aos seus beneficiários [1]. Portanto, você pode consultar a rede credenciada da operadora antes de contratar um plano."
+ },
+ {
+  "id": "q127",
+  "type": "unanswerable",
+  "question": "Quanto as operadoras pagaram de ressarcimento ao SUS em 2023?",
+  "reference": "As normas do corpus não contêm o valor total ressarcido ao SUS em 2023; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações específicas sobre o valor total pago pelas operadoras de planos de saúde ao SUS em 2023. Eles descrevem os procedimentos e responsabilidades relacionadas ao ressarcimento, mas não fornecem dados financeiros específicos. Portanto, não é possível responder à pergunta com base apenas nessas normas."
+ },
+ {
+  "id": "q171",
+  "type": "out_of_scope",
+  "question": "Como faço para tirar o Cartão Nacional de Saúde, o cartão do SUS?",
+  "reference": "A pergunta trata de cadastro no SUS, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações sobre como obter o Cartão Nacional de Saúde (CNS) diretamente dos órgãos de saúde. Eles tratam da inclusão do número do CNS nos cartões de identificação de planos privados de saúde e da obrigação das operadoras de informar esse número aos beneficiários. Para obter o CNS, você deve consultar as normas do Ministério da Saúde, que não estão incluídas nos trechos fornecidos. [1][2][3][4][5][6]"
+ },
+ {
+  "id": "q170",
+  "type": "out_of_scope",
+  "question": "Quais vacinas meu bebê precisa tomar aos 6 meses pelo calendário do SUS?",
+  "reference": "A pergunta trata de calendário de vacinação do SUS, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações sobre o calendário vacinal do SUS para bebês de 6 meses. Eles tratam de coberturas obrigatórias de medicamentos na saúde suplementar, não abordando vacinas ou o SUS. Portanto, não é possível responder à pergunta com base apenas nessas normas da ANS."
+ },
+ {
+  "id": "q079",
+  "type": "direct",
+  "question": "Recebi uma carta avisando que minha operadora vendeu a carteira de clientes para outra empresa. A nova operadora pode me impor novas carências ou mudar o mês do meu reajuste?",
+  "reference": "Não. Na alienação de carteira as condições dos contratos devem ser mantidas integralmente: é vedado estabelecer carências adicionais e alterar as cláusulas de reajuste, inclusive a data de aniversário do contrato (RN 112, art. 4º, § 1º).",
+  "evidence": [
+   {
+    "source": "RN-112, Art. 4",
+    "quote": "É vedado o estabelecimento de quaisquer carências adicionais nestes contratos, bem como a alteração das cláusulas de reajuste de contraprestação pecuniária, inclusive em relação à data de seu aniversário."
+   }
+  ],
+  "answer": "De acordo com a Resolução Normativa (RN) nº 565, a responsabilidade pelas comunicações de reajuste e solicitações de autorização para reajuste é da cedente até a conclusão do processo de transferência. Após a conclusão, a adquirente assume essa responsabilidade [1][2]. Isso significa que as condições de reajuste, como o mês de aplicação, devem permanecer inalteradas durante o processo de transferência. Portanto, a nova operadora não pode alterar o mês do seu reajuste.\n\nQuanto às carências, a RN nº 561 estabelece que a mudança de plano pode implicar no cumprimento de novos períodos de carência, desde que não seja por motivo de portabilidade de carências [6]. No entanto, a portabilidade de carências é um direito que pode ser perdido se a mudança não for motivada por essa razão específica. Se você não estiver migrando por portabilidade, pode ser necessário cumprir novas carências no novo plano [6].\n\nEm resumo, a nova operadora não pode alterar unilateralmente o mês do reajuste, mas pode aplicar novas carências, dependendo das circunstâncias da mudança de plano [6][1][2]."
+ },
+ {
+  "id": "q178",
+  "type": "out_of_scope",
+  "question": "Qual a dieta mais indicada para quem tem diabetes tipo 2?",
+  "reference": "A pergunta trata de orientação nutricional, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações específicas sobre dietas para diabetes tipo 2. Eles abordam cobertura de medicamentos e procedimentos relacionados a diversas condições, mas não fornecem detalhes sobre dietas ou orientações nutricionais. Portanto, não é possível responder à pergunta com base apenas nessas normas."
+ },
+ {
+  "id": "q008",
+  "type": "multi_hop",
+  "question": "Pedi autorização para um exame de laboratório ambulatorial. A operadora tem 5 dias úteis para me responder?",
+  "reference": "Não. Quando o prazo máximo de atendimento da RN 566 é menor que o prazo de resposta da RN 623, a resposta deve sair dentro do prazo da RN 566 (RN 623, art. 12, § 1º). Para exames de laboratório de análises clínicas em regime ambulatorial esse prazo é de até 3 dias úteis (RN 566, art. 3º, X).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 12",
+    "quote": "a resposta da operadora ao beneficiário deverá se dar dentro do prazo previsto na Resolução Normativa n° 566"
+   },
+   {
+    "source": "RN-566, Art. 3",
+    "quote": "serviços de diagnóstico por laboratório de análises clínicas em regime ambulatorial: em até três dias úteis"
+   }
+  ],
+  "answer": "De acordo com a Resolução Normativa (RN) nº 623, a operadora tem até cinco dias úteis para responder a solicitações de procedimentos ou serviços de cobertura assistencial que não sejam de urgência ou emergência [4]. No entanto, se o exame de laboratório ambulatorial estiver coberto pelo prazo mais curto estabelecido na RN nº 566, que é de três dias úteis para serviços de diagnóstico por laboratório de análises clínicas em regime ambulatorial [1], a operadora deve responder dentro desse prazo mais curto [4, §1º]. Portanto, a resposta ao seu pedido deve ocorrer no prazo de três dias úteis, não cinco."
+ },
+ {
+  "id": "q102",
+  "type": "multi_hop",
+  "question": "Fui excluído do programa de envelhecimento ativo por não participar das atividades. Perco o desconto? A operadora pode me cobrar de volta o que já foi descontado?",
+  "reference": "A não participação injustificada leva à exclusão e à perda do direito à bonificação; a operadora deve comunicar o beneficiário e é dela o ônus de provar a não participação (RN 499, art. 13). Ela não pode cobrar ressarcimento dos valores já concedidos como bonificação (RN 499, art. 24).",
+  "evidence": [
+   {
+    "source": "RN-499, Art. 13",
+    "quote": "A não participação injustificada do beneficiário nas atividades propostas pelo programa de promoção do envelhecimento ativo ao longo do curso da vida ensejará sua exclusão e a consequente perda do direito ao recebimento da bonificação."
+   },
+   {
+    "source": "RN-499, Art. 24",
+    "quote": "É vedada à operadora a cobrança de ressarcimento de prêmios ou dos valores concedidos a título de bonificação aos beneficiários excluídos"
+   }
+  ],
+  "answer": "Sim, de acordo com o artigo 13 da RN nº 499, a não participação injustificada nas atividades do programa de envelhecimento ativo resulta na perda do direito à bonificação [1]. Portanto, você perde o desconto após a exclusão. No entanto, a operadora não pode cobrar de volta os valores já descontados, conforme estabelece o artigo 24 da mesma resolução [5]."
+ },
+ {
+  "id": "q093",
+  "type": "multi_hop",
+  "question": "Se a operadora não divulgar a rede credenciada no site como a ANS exige, ela pode ser multada? A classificação da operadora muda o valor da multa?",
+  "reference": "Sim. O descumprimento da RN 486 sujeita a operadora às penalidades previstas em norma própria (RN 486, art. 6º). No cálculo das multas aplicam-se fatores multiplicadores conforme o segmento de classificação prudencial: S1 1,0; S2 0,8; S3 0,6; S4 0,4 (RN 656, art. 2º, que alterou o art. 10 da RN 489).",
+  "evidence": [
+   {
+    "source": "RN-486, Art. 6",
+    "quote": "O descumprimento do disposto nesta Resolução Normativa ensejará a aplicação de penalidades prevista em norma própria."
+   },
+   {
+    "source": "RN-656, Art. 2",
+    "quote": "I - S1: 1,0 (um inteiro); II – S2: 0,8 (oito décimos); III - S3: 0,6 (seis décimos); e IV - S4: 0,4 (quatro décimos)."
+   }
+  ],
+  "answer": "Sim, se a operadora não divulgar a rede credenciada no site conforme exigido pela ANS, ela pode ser multada. Isso está previsto no Art. 42 da RN nº 489, que estabelece que a não publicação ou divulgação das informações exigidas pela ANS resulta em multa [4].\n\nA classificação da operadora pode influenciar o valor da multa. De acordo com o Art. 10 da RN nº 489, como alterado pela RN nº 656, existem fatores multiplicadores para o cálculo do valor das multas baseados na classificação prudencial da operadora (segmentos S1, S2, S3 e S4) [2][3]. Portanto, a classificação da operadora pode modificar o valor da multa aplicada."
+ },
+ {
+  "id": "q005",
+  "type": "direct",
+  "question": "A operadora pode responder minha solicitação de cobertura apenas dizendo que ela está \"em análise\"?",
+  "reference": "Não. Não são admitidas respostas genéricas como \"em análise\", \"em processamento\" ou \"em auditoria\"; a resposta deve ser circunstanciada e em linguagem de fácil compreensão (RN 623, art. 12, § 5º).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 12",
+    "quote": "não serão admitidas respostas genéricas para atendimento aos prazos de que trata este artigo"
+   }
+  ],
+  "answer": "De acordo com o trecho [2], a operadora não pode simplesmente responder que a solicitação está \"em análise\" sem fornecer uma resposta definitiva dentro dos prazos estabelecidos. Para procedimentos de urgência e emergência, a resposta deve ser imediata. Para outros casos, a operadora tem até cinco dias úteis para responder, e para procedimentos de alta complexidade, tem até dez dias úteis. Portanto, a operadora deve fornecer uma resposta definitiva (aprovação ou negativa) dentro desses prazos, não podendo apenas informar que a solicitação está \"em análise\". [2]"
+ },
+ {
+  "id": "q107",
+  "type": "multi_hop",
+  "question": "Declarei uma doença preexistente e a operadora aplicou cobertura parcial temporária. O que fica sem cobertura, por quanto tempo, e onde está definido quais procedimentos são de alta complexidade?",
+  "reference": "Por até 24 meses ininterruptos a partir da contratação ou adesão, podem ficar suspensos apenas os procedimentos de alta complexidade (PAC), leitos de alta tecnologia e procedimentos cirúrgicos relacionados exclusivamente à doença declarada (RN 558, art. 2º, II). Os PAC são os procedimentos assim identificados no Anexo I do Rol de Procedimentos (RN 465, art. 1º, §1º).",
+  "evidence": [
+   {
+    "source": "RN-558, Art. 2",
+    "quote": "por um período ininterrupto de até vinte e quatro meses, a partir da data da contratação ou adesão ao plano privado de assistência à saúde, a suspensão da cobertura de Procedimentos de Alta Complexidade (PAC), leitos de alta tecnologia e procedimentos cirúrgicos"
+   },
+   {
+    "source": "RN-465, Art. 1",
+    "quote": "constituído pelos procedimentos assim identificados no Anexo I desta Resolução Normativa, que podem ser objeto de cobertura parcial temporária - CPT nos casos de doenças e lesões preexistentes - DLP"
+   }
+  ],
+  "answer": "Quando uma operadora aplica cobertura parcial temporária (CPT) por uma doença preexistente, fica suspensa a cobertura de procedimentos de alta complexidade (PAC), leitos de alta tecnologia e procedimentos cirúrgicos relacionados exclusivamente à doença preexistente, por um período ininterrupto de até 24 meses a partir da data de contratação ou adesão ao plano [3][4]. Os procedimentos de alta complexidade são especificados no Rol de Procedimentos e Eventos em Saúde da ANS, disponível em www.gov.br/ans [1][4]."
+ },
+ {
+  "id": "q128",
+  "type": "unanswerable",
+  "question": "Qual a nota do IDSS da Hapvida no último ano-base divulgado?",
+  "reference": "As normas do corpus não contêm a nota do IDSS de operadoras específicas; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações específicas sobre a nota do IDSS da Hapvida no último ano-base divulgado. São necessários dados adicionais ou um documento que contenha esses resultados específicos. [2][3]"
+ },
+ {
+  "id": "q002",
+  "type": "direct",
+  "question": "Em quanto tempo a operadora precisa garantir um exame de laboratório de análises clínicas em regime ambulatorial?",
+  "reference": "Em até 3 (três) dias úteis (RN 566, art. 3º, X), salvo se o exame for procedimento de alta complexidade do Rol, caso em que o prazo é de até 21 dias úteis (art. 3º, § 5º).",
+  "evidence": [
+   {
+    "source": "RN-566, Art. 3",
+    "quote": "serviços de diagnóstico por laboratório de análises clínicas em regime ambulatorial: em até três dias úteis"
+   }
+  ],
+  "answer": "A operadora deve garantir a realização de serviços de diagnóstico por laboratório de análises clínicas em regime ambulatorial em até três dias úteis, conforme estabelecido no artigo 3º, inciso X, da Resolução Normativa nº 566 [1]."
+ },
+ {
+  "id": "q118",
+  "type": "multi_hop",
+  "question": "A operadora negou meu exame só por telefone e diz que não manda nada por escrito. Ela pode fazer isso? Se descumprir, que sanção a ANS prevê?",
+  "reference": "Não. A negativa deve ser reduzida a termo e informada detalhadamente ao beneficiário, dentro do prazo de resposta e independentemente de solicitação, com o motivo e a cláusula contratual ou dispositivo legal que a justifique (RN 623, art. 14). Deixar de observar as regras de atendimento nas solicitações de cobertura é infração punida com advertência e multa conforme o Anexo da RN 489 (RN 489, art. 99).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 14",
+    "quote": "a operadora deverá reduzi-la a termo e informar, detalhadamente, em linguagem clara e adequada, ao beneficiário, dentro do prazo de resposta previsto no art. 12"
+   },
+   {
+    "source": "RN-623, Art. 14",
+    "quote": "independentemente de solicitação, o motivo da negativa de autorização do procedimento, indicando a cláusula contratual ou o dispositivo legal que a justifique."
+   },
+   {
+    "source": "RN-489, Art. 99",
+    "quote": "Deixar de observar as regras sobre atendimento aos beneficiários nas solicitações não assistenciais e de coberturas assistenciais."
+   },
+   {
+    "source": "RN-489, Art. 99",
+    "quote": "Sanção – Advertência; ( Alterado pela RN nº 659, de 22/12/2025 ) Multa, conforme Anexo desta Resolução."
+   }
+  ],
+  "answer": "A operadora não pode negar o exame apenas por telefone sem fornecer uma justificativa por escrito. A ANS exige que todas as comunicações importantes, como negações de procedimentos médicos, sejam documentadas em forma escrita [1][2][3]. Se a operadora descumprir essa exigência, ela pode ser penalizada com multa diária de R$ 5.000,00 [2][3]. Além disso, se a omissão persistir por mais de dois anos, a ANS pode cancelar a autorização de funcionamento da operadora e exigir a alienação da carteira de beneficiários [4][5]."
+ },
+ {
+  "id": "q027",
+  "type": "direct",
+  "question": "Tenho um plano empresarial com 8 vidas para a minha pequena empresa. O reajuste é calculado só com base no uso do meu contrato?",
+  "reference": "Não. A operadora é obrigada a reunir todos os seus contratos coletivos com menos de trinta beneficiários em um agrupamento, e o percentual de reajuste é calculado para esse agrupamento (RN 565, art. 37).",
+  "evidence": [
+   {
+    "source": "RN-565, Art. 37",
+    "quote": "É obrigatório às operadoras de planos privados de assistência à saúde formar um agrupamento com todos os seus contratos coletivos com menos de trinta beneficiários para o cálculo do percentual de reajuste"
+   }
+  ],
+  "answer": "Não, o reajuste não é calculado apenas com base no uso do seu contrato. De acordo com o artigo 35 da Resolução Normativa nº 565, contratos de planos privados de assistência à saúde coletivos empresariais, como o seu, devem conter uma cláusula de reajuste que segue a metodologia de agrupamento de contratos estabelecida na resolução. Isso significa que o reajuste é calculado para todo o agrupamento dos contratos coletivos da operadora, independentemente do plano contratado, conforme o artigo 38 da mesma resolução [5][4]."
+ },
+ {
+  "id": "q174",
+  "type": "out_of_scope",
+  "question": "Quais os sintomas de dengue e quando devo procurar um pronto-socorro?",
+  "reference": "A pergunta trata de orientação médica sobre sintomas, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os sintomas da dengue e as orientações específicas sobre quando procurar um pronto-socorro não são mencionados nos trechos fornecidos. Os trechos abordam temas como doenças preexistentes, cobertura parcial temporária, procedimentos médicos específicos e atenção a portadores de transtornos mentais, mas não fornecem informações sobre os sintomas da dengue ou orientações sobre atendimento médico para essa doença. [1][2][3][4][5][6]"
+ },
+ {
+  "id": "q103",
+  "type": "multi_hop",
+  "question": "Em que momento a operadora tem que me entregar o Manual de Orientação para Contratação (MPS) e o Guia de Leitura Contratual (GLC) quando contrato um plano individual?",
+  "reference": "O MPS deve ser entregue ao beneficiário titular antes da assinatura da proposta de contratação (RN 557, art. 33, I), e o GLC junto com o cartão de identificação do beneficiário titular (RN 557, art. 34).",
+  "evidence": [
+   {
+    "source": "RN-557, Art. 33",
+    "quote": "O MPS deverá ser entregue anteriormente à assinatura da proposta de contratação, segundo o tipo de contratação: I - nos planos individuais: ao beneficiário titular"
+   },
+   {
+    "source": "RN-557, Art. 34",
+    "quote": "O GLC deverá ser entregue junto com o cartão de identificação do beneficiário titular, independentemente do tipo de contratação."
+   }
+  ],
+  "answer": "De acordo com o artigo 30 da RN nº 557 [1], a operadora de planos de saúde deve entregar o Manual de Orientação para Contratação (MPS) e o Guia de Leitura Contratual (GLC) como parte dos procedimentos para contratação ou ingresso aos planos individuais ou coletivos. O momento específico para entrega é mencionado no artigo 33 ou 34 da mesma resolução, conforme o caso [4, §1º]. No entanto, os artigos 33 e 34 não são fornecidos nos trechos disponíveis, então não há detalhes adicionais sobre o momento exato da entrega."
+ },
+ {
+  "id": "q065",
+  "type": "direct",
+  "question": "A operadora me avisou do atraso no plano só por WhatsApp. Essa notificação vale para ela me excluir?",
+  "reference": "A notificação por SMS ou aplicativo de mensagens só é válida se o destinatário responder confirmando a sua ciência (RN 593, art. 8º, §2º).",
+  "evidence": [
+   {
+    "source": "RN-593, Art. 8",
+    "quote": "A notificação realizada por SMS ou aplicativo de mensagens para celulares prevista no inciso II do caput, somente será válida se o destinatário responder a notificação confirmando a sua ciência."
+   }
+  ],
+  "answer": "A notificação por WhatsApp pode ser válida, desde que esteja entre os meios de notificação disponíveis no cadastro do beneficiário e que a operadora tenha esgotado todas as tentativas de notificação por esses meios. De acordo com o artigo 8º, § 4º da RN nº 593, a notificação por inadimplência pode ser feita por meio de área restrita na página institucional da operadora ou por aplicativo, desde que acessível por login e senha pessoais. No entanto, não há menção específica a notificações por WhatsApp. Se o WhatsApp é um meio de comunicação registrado no cadastro do beneficiário e a operadora tentou notificar por todos os meios disponíveis, a notificação seria válida para proceder à exclusão do beneficiário [1].\n\nÉ importante verificar se a notificação por WhatsApp foi realizada dentro do prazo estabelecido. De acordo com o artigo 4º, a notificação deve ocorrer até o 50º dia do não pagamento, seguido de um prazo de 10 dias para pagamento do débito [2].\n\nAlém disso, a operadora deve observar as disposições da Lei Geral de Proteção de Dados Pessoais (LGPD) ao tratar os dados de contato do beneficiário [1]. Se houver qualquer suspeita de violação da LGPD, a operadora deve encaminhar o caso à autoridade competente [1]."
+ },
+ {
+  "id": "q115",
+  "type": "multi_hop",
+  "question": "Pedi uma cirurgia e a operadora abriu junta médica por divergência técnica. Ela continua presa ao prazo normal de resposta da solicitação? E depois que a junta concluir, em quanto tempo tenho que ser informado do resultado?",
+  "reference": "Instaurada motivadamente a junta, o dever de informação ao beneficiário é considerado cumprido se observados a forma e os prazos da norma da junta médica, a RN 424 (RN 623, art. 12, § 3º). Por essa norma, a operadora deve informar o resultado da junta ao beneficiário e ao profissional assistente em até 2 dias úteis após a elaboração do parecer (RN 424, art. 19).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 12",
+    "quote": "Caso tenha sido instaurada motivadamente junta médica/odontológica, na forma da normatização vigente, o dever de informação ao beneficiário será considerado atendido quando observados a forma e prazos previstos na Resolução Normativa nº 424"
+   },
+   {
+    "source": "RN-424, Art. 19",
+    "quote": "A operadora deverá informar ao beneficiário e ao profissional assistente o resultado da análise clínica realizada pela junta em até 2 (dois) dias úteis após sua elaboração"
+   }
+  ],
+  "answer": "Quando há divergência técnica e a operadora abre uma junta médica, o prazo normal de resposta da solicitação não se aplica diretamente, pois o prazo é suspenso para a realização da junta e a emissão do parecer técnico conclusivo. No entanto, conforme o art. 4º, §1º, o prazo para a realização do procedimento ou para a apresentação do parecer técnico conclusivo do desempatador não pode ultrapassar os prazos de garantia de atendimento estabelecidos na RN nº 259 [5].\n\nDepois que a junta conclui o processo, a operadora tem o prazo de 2 (dois) dias úteis para informar o resultado ao beneficiário e ao profissional assistente, conforme o art. 19 [1]."
+ },
+ {
+  "id": "q023",
+  "type": "direct",
+  "question": "Meu filho tem autismo e o médico indicou um método específico de terapia. A operadora pode oferecer qualquer profissional ou tem que ser alguém que aplique esse método?",
+  "reference": "A operadora deve oferecer atendimento por prestador apto a executar o método ou técnica indicado pelo médico assistente (RN 539, art. 3º, que acrescentou o §4º ao art. 6º da RN 465).",
+  "evidence": [
+   {
+    "source": "RN-539, Art. 3",
+    "quote": "a operadora deverá oferecer atendimento por prestador apto a executar o método ou técnica indicados pelo médico assistente para tratar a doença ou agravo do paciente"
+   }
+  ],
+  "answer": "De acordo com a RN nº 465 [1], a operadora deve oferecer atendimento por um prestador apto a executar o método ou técnica indicados pelo médico assistente para tratar o transtorno do espectro autista. Portanto, a operadora não pode oferecer qualquer profissional, mas sim alguém que seja capaz de aplicar o método específico indicado pelo médico [1][2]."
+ },
+ {
+  "id": "q140",
+  "type": "unanswerable",
+  "question": "Qual o prazo máximo de carência que o plano pode exigir para cobrir um parto a termo?",
+  "reference": "As normas do corpus não contêm o prazo máximo de carência para parto a termo; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "O prazo máximo de carência que o plano pode exigir para cobrir um parto a termo é de 300 dias. Esta informação está prevista nos artigos 17 e 7º dos RN nº 562 e 438, respectivamente [1][2]."
+ },
+ {
+  "id": "q033",
+  "type": "direct",
+  "question": "O titular do nosso plano familiar faleceu. O contrato é cancelado para os dependentes?",
+  "reference": "Não. A extinção do vínculo do titular não extingue o contrato; os dependentes já inscritos têm direito a manter as mesmas condições contratuais, assumindo as obrigações decorrentes (RN 557, art. 3º, § 1º).",
+  "evidence": [
+   {
+    "source": "RN-557, Art. 3",
+    "quote": "A extinção do vínculo do titular do plano familiar não extingue o contrato, sendo assegurado aos dependentes já inscritos o direito à manutenção das mesmas condições contratuais"
+   }
+  ],
+  "answer": "Segundo o artigo 3º, §1º da Resolução Normativa nº 557 [1], a extinção do vínculo do titular do plano familiar não extingue o contrato, assegurando-se aos dependentes já inscritos o direito à manutenção das mesmas condições contratuais, com a assunção das obrigações decorrentes. Portanto, os dependentes não são automaticamente cancelados do plano e podem continuar nele, mantendo as mesmas condições.\n\nNo entanto, é importante notar que, conforme o artigo 3º, §2º da mesma resolução [1], essa garantia não se aplica em casos de rescisão unilateral do contrato por fraude ou não-pagamento da mensalidade, conforme previsto na Lei nº 9.656/1998.\n\nAlém disso, o artigo 15, §1º da Resolução Normativa nº 562 [2] reforça que a extinção do vínculo do titular do plano familiar não extingue o contrato, assegurando aos dependentes já inscritos o direito à manutenção das mesmas cláusulas contratuais, com a assunção das obrigações decorrentes."
+ },
+ {
+  "id": "q006",
+  "type": "direct",
+  "question": "O plano de saúde é obrigado a cobrir tratamento experimental?",
+  "reference": "Não. Tratamento clínico ou cirúrgico experimental (por exemplo, com medicamentos, produtos ou técnicas não registrados no país) está entre as exclusões assistenciais permitidas do plano-referência (RN 465, art. 17, parágrafo único, I).",
+  "evidence": [
+   {
+    "source": "RN-465, Art. 17",
+    "quote": "São permitidas as seguintes exclusões assistenciais: I - tratamento clínico ou cirúrgico experimental"
+   }
+  ],
+  "answer": "De acordo com os trechos fornecidos, o plano de saúde pode excluir o tratamento clínico ou cirúrgico experimental de sua cobertura assistencial. Isso é permitido conforme estabelecido no artigo 16, §1º, I da Resolução Normativa nº 211 e no artigo 17, I da Resolução Normativa nº 465. Portanto, o plano de saúde não é obrigado a cobrir tratamento experimental [1][2]."
+ },
+ {
+  "id": "q022",
+  "type": "direct",
+  "question": "Estou grávida e em junho pedi à operadora o percentual de cesáreas do meu obstetra e da maternidade. De qual período vêm os dados e em quanto tempo ela tem que responder?",
+  "reference": "Como o pedido foi feito após 31 de março, a operadora deve fornecer os percentuais do ano imediatamente anterior, no prazo máximo de 15 dias contados da solicitação (RN 368, art. 2º, §2º, I).",
+  "evidence": [
+   {
+    "source": "RN-368, Art. 2",
+    "quote": "quando solicitado após 31 de março do ano de solicitação, a operadora deverá fornecer os percentuais relativos ao ano imediatamente anterior à solicitação, no prazo máximo de 15 (quinze) dias"
+   }
+  ],
+  "answer": "De acordo com o artigo 2º da RN nº 368, quando a solicitação é feita entre 1º de janeiro e 31 de março do ano de solicitação, a operadora deve fornecer os percentuais do segundo ano imediatamente anterior ao pedido. Como você fez a solicitação em junho, a operadora deve fornecer os dados do ano imediatamente anterior à solicitação, que neste caso seria o ano de 2022 [1].\n\nA operadora tem um prazo máximo de 15 dias úteis para disponibilizar as informações solicitadas a partir da data da solicitação [1]."
+ },
+ {
+  "id": "q153",
+  "type": "unanswerable",
+  "question": "Um menor de idade pode contratar sozinho um plano de saúde individual?",
+  "reference": "As normas do corpus não contêm regras sobre contratação por menor de idade; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Com base nos trechos fornecidos, não há uma menção específica sobre a capacidade de um menor de idade contratar um plano de saúde individual. No entanto, o Anexo I da RN nº 389 menciona que os planos individuais ou familiares podem ser contratados diretamente pelo beneficiário, com ou sem seu grupo familiar [1]. Isso sugere que a contratação individual é feita pelo beneficiário, mas não especifica a idade mínima. Dado que a legislação brasileira geralmente considera os menores de idade incapazes de contratar sem representação legal, é provável que um menor não possa contratar um plano de saúde individual sozinho. No entanto, a resposta definitiva requer informações adicionais que não estão presentes nos trechos fornecidos."
+ },
+ {
+  "id": "q004",
+  "type": "direct",
+  "question": "Qual o prazo para a operadora responder uma solicitação não assistencial do beneficiário?",
+  "reference": "Sete dias úteis, contados da data do registro da solicitação (RN 623, art. 11).",
+  "evidence": [
+   {
+    "source": "RN-623, Art. 11",
+    "quote": "As solicitações não assistenciais serão respondidas no prazo de sete dias úteis, contado da data de seu registro."
+   }
+  ],
+  "answer": "De acordo com a Resolução Normativa nº 623, o prazo para a operadora responder uma solicitação não assistencial do beneficiário é de sete dias úteis, contado da data de seu registro [2]."
+ },
+ {
+  "id": "q034",
+  "type": "direct",
+  "question": "Sou empresário individual. O que preciso comprovar para contratar um plano de saúde coletivo empresarial?",
+  "reference": "Documento que confirme a inscrição nos órgãos competentes e a regularidade cadastral junto à Receita Federal (além de outros exigidos pela legislação), pelo período mínimo de seis meses (RN 557, art. 9º, § 1º).",
+  "evidence": [
+   {
+    "source": "RN-557, Art. 9",
+    "quote": "o empresário individual deverá apresentar documento que confirme a sua inscrição nos órgãos competentes, bem como sua regularidade cadastral junto à Receita Federal, e outros que vierem a ser exigidos pela legislação vigente, pelo período mínimo de seis meses"
+   }
+  ],
+  "answer": "Para contratar um plano de saúde coletivo empresarial, como empresário individual, você precisa comprovar sua inscrição e regularidade cadastral junto aos órgãos competentes, incluindo a Receita Federal, pelo período mínimo de seis meses [1]. Além disso, a operadora de planos de saúde pode exigir outros documentos conforme a legislação vigente [1]. Anualmente, você também deve comprovar a condição de empresário individual e a regularidade dos requisitos de elegibilidade dos beneficiários vinculados ao contrato [2]."
+ },
+ {
+  "id": "q173",
+  "type": "out_of_scope",
+  "question": "Que licenças da vigilância sanitária preciso para abrir uma clínica de estética?",
+  "reference": "A pergunta trata de licenciamento sanitário de estabelecimentos, assunto fora da regulação da ANS sobre planos de saúde; o sistema deve dizer que não pode respondê-la com base nas normas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não abordam diretamente as licenças da vigilância sanitária necessárias para abrir uma clínica de estética. Eles tratam principalmente de requisitos para operadoras de planos de saúde e entidades acreditadoras. Portanto, não é possível responder à sua pergunta com base apenas nessas informações. Recomendo consultar as normas específicas da vigilância sanitária para estabelecimentos de estética."
+ },
+ {
+  "id": "q055",
+  "type": "direct",
+  "question": "Me aposentei depois de contribuir 6 anos para o plano de saúde da empresa. Tenho direito de continuar no plano? Por quanto tempo?",
+  "reference": "Sim, desde que assuma o pagamento integral; como contribuiu por menos de 10 anos, o direito é à razão de 1 ano para cada ano de contribuição, ou seja, 6 anos (RN 488, art. 5º, parágrafo único).",
+  "evidence": [
+   {
+    "source": "RN-488, Art. 5",
+    "quote": "o direito de manutenção como beneficiário, à razão de 1 (um) ano para cada ano de contribuição, desde que assuma o seu pagamento integral"
+   }
+  ],
+  "answer": "Sim, você tem direito de continuar no plano de saúde da empresa após a aposentadoria. De acordo com o artigo 5º da Resolução Normativa nº 488 [1], o ex-empregado aposentado que contribuiu para o plano privado de assistência à saúde por período inferior a 10 anos pode manter sua condição de beneficiário proporcionalmente ao tempo de contribuição, ou seja, 1 ano de manutenção por cada ano de contribuição. Como você contribuiu por 6 anos, você tem direito de permanecer no plano por mais 6 anos após a aposentadoria."
+ },
+ {
+  "id": "q147",
+  "type": "unanswerable",
+  "question": "Em quantos dias a operadora é obrigada a pagar a conta apresentada pelo hospital credenciado?",
+  "reference": "As normas do corpus não contêm um prazo fixo, em dias, para a operadora pagar o prestador; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não especificam prazos para o pagamento de contas apresentadas por hospitais credenciados. Portanto, não é possível responder à pergunta com base apenas nessas normas."
+ },
+ {
+  "id": "q104",
+  "type": "multi_hop",
+  "question": "Em que situações a operadora pode rescindir o plano coletivo empresarial contratado por um empresário individual, e com que antecedência precisa avisar?",
+  "reference": "Fora os casos de ilegitimidade do contratante e de inadimplência, só pode rescindir na data de aniversário do contrato, com comunicação prévia de no mínimo 60 dias e apresentação das razões (RN 557, art. 14). Se verificar a ilegitimidade do contratante no aniversário, pode rescindir após notificação prévia de 60 dias para que ele comprove a regularidade do registro (RN 557, art. 10, § 1º). Na inadimplência, exige-se comunicação prévia informando que, sem pagamento, o contrato será rescindido na data indicada (RN 557, art. 14, parágrafo único).",
+  "evidence": [
+   {
+    "source": "RN-557, Art. 14",
+    "quote": "somente poderá ser rescindido pela operadora na data de seu aniversário, mediante comunicação prévia ao contratante, com antecedência mínima de sessenta dias"
+   },
+   {
+    "source": "RN-557, Art. 10",
+    "quote": "Verificada a ilegitimidade do contratante no aniversário do contrato, a operadora poderá rescindir o contrato, desde que realize a notificação prévia com sessenta dias de antecedência"
+   }
+  ],
+  "answer": "A operadora pode rescindir o contrato de plano coletivo empresarial contratado por um empresário individual apenas na data de aniversário do contrato, mediante comunicação prévia ao contratante com antecedência mínima de sessenta dias [3]. A rescisão pode ocorrer se a operadora verificar a ilegitimidade do contratante ou a inadimplência [3][4]. Além disso, a operadora deve apresentar as razões da rescisão no ato da comunicação [3]. No caso de inadimplência, a comunicação deve informar que o contrato será rescindido na data indicada, caso não seja efetuado o pagamento [3]."
+ },
+ {
+  "id": "q158",
+  "type": "unanswerable",
+  "question": "Qual foi o resultado da pesquisa de satisfação dos beneficiários com as operadoras no último ano?",
+  "reference": "As normas do corpus não contêm resultados de pesquisas de satisfação de beneficiários; o sistema deve informar que não encontrou essa informação nas resoluções normativas.",
+  "evidence": [],
+  "answer": "Os trechos fornecidos não contêm informações sobre resultados específicos de pesquisas de satisfação dos beneficiários com as operadoras no último ano. Eles abordam diretrizes para o atendimento aos beneficiários, categorização de operadoras e procedimentos relacionados ao cadastro e auditoria de dados, mas não mencionam resultados de pesquisas de satisfação. [1][2][3][4][5][6]"
+ }
+]
