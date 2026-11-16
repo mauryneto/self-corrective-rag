@@ -5,9 +5,34 @@ national regulator). An LLM judge checks every answer; failed answers trigger qu
 decomposition; questions the corpus can't answer are declined. Every design choice is backed by an
 ablation on a fixed eval set, reporting accuracy, refusal precision, latency and cost per query.
 
-> **Status: work in progress (week 1 of 4).** The corpus pipeline (with incremental updates),
-> the index and the baseline (V0) are in place. The eval set, the self-corrective loop, the guardrail and the results table
-> come next. No numbers are reported until they are measured.
+> **Status: work in progress (week 2 of 4).** Corpus pipeline with incremental updates, index,
+> baseline (V0), a 180-question eval set and its first measured results. The self-corrective loop
+> and the guardrail come next.
+
+## Results
+
+Measured on the 180-question eval set (`eval/runs/`). Each new version gets a row.
+
+| Version | Correct | Correct + partial | Multi-hop correct | Recall@5 | MRR | Declines when it should | Refusal precision | Citations supported | p50 / p95 latency | Cost / question |
+|---|---|---|---|---|---|---|---|---|---|---|
+| V0 | 43% | 77% | 5% | 73% | 0.61 | 97% | 94% | 69% | 28s / 44s | US$ 0 (local) |
+
+"Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
+refusal columns over the 60 it should decline. V0 answers with `qwen2.5:14b` on a laptop GPU
+(RTX 5070, 8 GB), hence the latency and zero cost. Judge: Claude Haiku 5.5.
+
+**What V0 shows:**
+- **Multi-hop is the weak spot: 5% correct.** Retrieval finds every needed article for only 8 of
+  the 40 multi-hop questions (Recall@5 50%, against 85% on direct questions). One vector search
+  for a question that needs two norms brings back one of them. This is what V1 (hybrid search and
+  reranking) and V2 (query decomposition and a second retrieval pass) are for.
+- **Declining works already: 97%.** The prompt's "say when the excerpts are not enough" holds on
+  unanswerable and out-of-scope questions, with 3% of answerable questions wrongly declined.
+- **Citations: 69% supported.** The local model sometimes fills gaps from memory and attributes
+  rules to revoked norms (e.g. RN 259 instead of RN 566).
+
+> The judge's grades are not yet validated against human labels; that comparison (50 labelled
+> answers, agreement reported as Cohen's kappa) is the next step and may change these numbers.
 
 ## Roadmap
 

@@ -13,6 +13,7 @@ import httpx
 
 from rag.config import get_settings
 from rag.costs import CallRecord
+from rag.retry import with_retries
 
 
 class LLMRefusal(RuntimeError):
@@ -34,17 +35,21 @@ class OllamaLLM:
 
     def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]:
         t0 = time.perf_counter()
-        resp = self.client.post(
-            f"{self.url}/api/chat",
-            json={
-                "model": self.model,
-                "stream": False,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-                "options": {"temperature": 0, "num_predict": max_tokens, "num_ctx": 16384},
-            },
-        )
-        resp.raise_for_status()
-        data = resp.json()
+
+        def call() -> dict:
+            resp = self.client.post(
+                f"{self.url}/api/chat",
+                json={
+                    "model": self.model,
+                    "stream": False,
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                    "options": {"temperature": 0, "num_predict": max_tokens, "num_ctx": 16384},
+                },
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+        data = with_retries(call)
         record = CallRecord(
             step=step,
             model=self.model,

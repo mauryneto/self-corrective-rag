@@ -5,6 +5,7 @@ from __future__ import annotations
 import httpx
 
 from rag.config import get_settings
+from rag.retry import with_retries
 
 
 class OllamaEmbedder:
@@ -19,9 +20,13 @@ class OllamaEmbedder:
         vectors: list[list[float]] = []
         for i in range(0, len(texts), self.batch_size):
             batch = texts[i : i + self.batch_size]
-            resp = self.client.post(f"{self.url}/api/embed", json={"model": self.model, "input": batch})
-            resp.raise_for_status()
-            vectors.extend(resp.json()["embeddings"])
+
+            def call(batch=batch):
+                resp = self.client.post(f"{self.url}/api/embed", json={"model": self.model, "input": batch})
+                resp.raise_for_status()
+                return resp.json()["embeddings"]
+
+            vectors.extend(with_retries(call))
         return vectors
 
     def embed_one(self, text: str) -> list[float]:
