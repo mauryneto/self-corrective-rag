@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# secrets: only .env.example is committed
+.env
+
+# downloaded and derived data are rebuilt by the ingest scripts
+data/raw/
+data/corpus/
+
+# experiment tracking
+mlruns/
+mlartifacts/
+
+# run logs
+data/*.log
