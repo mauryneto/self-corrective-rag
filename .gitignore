@@ -18,3 +18,4 @@ mlartifacts/
 
 # run logs
 data/*.log
+mlflow.db
