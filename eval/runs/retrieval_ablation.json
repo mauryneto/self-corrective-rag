@@ -1,0 +1,13 @@
+{
+ "note": "Retrieval-only eval on the 120 answerable questions (rag.eval.retrieval_eval). recall@5 = share of gold (norm, article) pairs in the top 5; complete = multi-hop questions with every gold article in the top 5. Pool 30 per list; RRF k=60 unless noted.",
+ "results": [
+  {"config": "vector (V0)", "recall@5": 0.733, "mrr": 0.611, "direct_recall@5": 0.850, "multi_hop_recall@5": 0.498, "multi_hop_complete": 8},
+  {"config": "lexical BM25", "recall@5": 0.597, "mrr": 0.502, "direct_recall@5": 0.675, "multi_hop_recall@5": 0.442, "multi_hop_complete": 8},
+  {"config": "lexical Postgres ts_rank (replaced by BM25)", "recall@5": 0.083, "mrr": 0.046, "direct_recall@5": 0.087, "multi_hop_recall@5": 0.075, "multi_hop_complete": 1},
+  {"config": "hybrid RRF", "recall@5": 0.703, "mrr": 0.620, "direct_recall@5": 0.787, "multi_hop_recall@5": 0.533, "multi_hop_complete": 11},
+  {"config": "hybrid RRF, BM25 weight 0.3, k=20", "recall@5": 0.726, "mrr": 0.643, "direct_recall@5": 0.838, "multi_hop_recall@5": 0.504, "multi_hop_complete": 8},
+  {"config": "hybrid + mMiniLM reranker (118M)", "recall@5": 0.708, "mrr": 0.623, "direct_recall@5": 0.800, "multi_hop_recall@5": 0.525, "multi_hop_complete": 10},
+  {"config": "vector + mMiniLM reranker (118M)", "recall@5": 0.710, "mrr": 0.622, "direct_recall@5": 0.800, "multi_hop_recall@5": 0.529, "multi_hop_complete": 10},
+  {"config": "hybrid + bge-reranker-v2-m3 (568M), top 20 (V1)", "recall@5": 0.817, "mrr": 0.767, "direct_recall@5": 0.913, "multi_hop_recall@5": 0.625, "multi_hop_complete": 16}
+ ]
+}

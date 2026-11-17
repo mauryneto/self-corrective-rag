@@ -55,7 +55,7 @@ def test_v0_puts_numbered_sources_in_the_prompt_and_tracks_cost():
 
 
 def test_ask_endpoint(monkeypatch):
-    monkeypatch.setattr(api, "get_pipeline", make_pipeline)
+    monkeypatch.setattr(api, "get_pipeline", lambda version="v1": make_pipeline())
     client = TestClient(api.app)
     r = client.post("/ask", json={"question": "Qual o prazo para consulta básica?"})
     assert r.status_code == 200
@@ -66,5 +66,5 @@ def test_ask_endpoint(monkeypatch):
 
 
 def test_ask_rejects_empty_question(monkeypatch):
-    monkeypatch.setattr(api, "get_pipeline", make_pipeline)
+    monkeypatch.setattr(api, "get_pipeline", lambda version="v1": make_pipeline())
     assert TestClient(api.app).post("/ask", json={"question": ""}).status_code == 422

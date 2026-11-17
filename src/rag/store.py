@@ -14,6 +14,7 @@ import numpy as np
 import psycopg
 from pgvector.psycopg import register_vector
 
+from rag.bm25 import BM25Index, parse_tsvector
 from rag.chunking import Chunk
 from rag.config import get_settings
 
@@ -87,12 +88,31 @@ class Store:
         ).fetchall()
         return [Hit(*r) for r in rows]
 
-    def lexical_search(self, query: str, k: int) -> list[Hit]:
+    def _bm25(self) -> BM25Index:
+        """Built on first use from the stored tsvectors; rebuilt after the index changes."""
+        n_chunks, _ = self.count()
+        if getattr(self, "_bm25_index", None) is None or self._bm25_size != n_chunks:
+            rows = self.conn.execute("SELECT chunk_id, tsv::text FROM chunks ORDER BY chunk_id").fetchall()
+            self._bm25_index = BM25Index([r[0] for r in rows], [parse_tsvector(r[1]) for r in rows])
+            self._bm25_size = n_chunks
+        return self._bm25_index
+
+    def query_terms(self, query: str) -> list[str]:
+        """The query's stemmed terms, from the same Portuguese configuration as the index."""
         rows = self.conn.execute(
-            """SELECT chunk_id, doc_id, unit, text, source_url,
-                      ts_rank_cd(tsv, q) AS score
-               FROM chunks, websearch_to_tsquery('portuguese', %s) q
-               WHERE tsv @@ q ORDER BY score DESC LIMIT %s""",
-            (query, k),
+            "SELECT lexeme FROM unnest(to_tsvector('portuguese', %s)) AS t(lexeme, positions, weights)", (query,)
         ).fetchall()
-        return [Hit(*r) for r in rows]
+        return [r[0] for r in rows]
+
+    def lexical_search(self, query: str, k: int) -> list[Hit]:
+        """BM25 over the chunks (see ``rag.bm25``): rare, distinctive terms count more than the
+        words every norm uses."""
+        ranked = self._bm25().search(self.query_terms(query), k)
+        if not ranked:
+            return []
+        rows = self.conn.execute(
+            "SELECT chunk_id, doc_id, unit, text, source_url FROM chunks WHERE chunk_id = ANY(%s)",
+            ([cid for cid, _ in ranked],),
+        ).fetchall()
+        by_id = {r[0]: r for r in rows}
+        return [Hit(*by_id[cid], score) for cid, score in ranked if cid in by_id]

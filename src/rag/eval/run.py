@@ -31,6 +31,10 @@ def get_pipeline(version: str):
         from rag.pipeline.v0 import V0Pipeline
 
         return V0Pipeline()
+    if version == "v1":
+        from rag.pipeline.v1 import V1Pipeline
+
+        return V1Pipeline()
     raise SystemExit(f"unknown pipeline version: {version}")
 
 
