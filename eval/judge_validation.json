@@ -1,0 +1,35 @@
+{
+ "n": 50,
+ "agreement": 0.68,
+ "kappa": 0.3827,
+ "binary_agreement": 0.76,
+ "binary_kappa": 0.4881,
+ "confusion_human_rows_judge_cols": {
+  "correct": {
+   "correct": 27,
+   "partial": 7,
+   "incorrect": 4
+  },
+  "partial": {
+   "correct": 1,
+   "partial": 5,
+   "incorrect": 4
+  },
+  "incorrect": {
+   "correct": 0,
+   "partial": 0,
+   "incorrect": 2
+  }
+ },
+ "human_counts": {
+  "partial": 10,
+  "correct": 38,
+  "incorrect": 2
+ },
+ "judge_counts": {
+  "partial": 12,
+  "correct": 28,
+  "incorrect": 10
+ },
+ "run": "v0_sample50_rubric-v2"
+}

@@ -35,8 +35,9 @@ class Verdict(BaseModel):
 
     reasoning: str = Field(description="Uma ou duas frases justificando a avaliação, em português.")
     verdict: Literal["correct", "partial", "incorrect"] = Field(
-        description="correct: responde certo e completo; partial: certo mas incompleto; incorrect: errado, "
-        "inventado, ou respondeu quando deveria ter recusado."
+        description="Só sobre o CONTEÚDO. correct: a resposta prática está certa; partial: certa, mas falta algo "
+        "que muda a resposta prática; incorrect: afirma algo que contradiz a referência ou inventa regra, ou "
+        "afirma uma resposta definitiva quando a base não responde."
     )
     refused: bool = Field(description="True se a resposta do sistema se recusou a responder / disse que não sabe.")
     citations_supported: bool | None = Field(
@@ -44,24 +45,39 @@ class Verdict(BaseModel):
     )
 
 
+# Rubric v2 (after validation against 50 human labels): v1 mixed two things in the verdict, the
+# content of the answer and the quality of its citations, and treated every detail of the
+# reference as essential. Agreement with the human labels was weak (kappa 0.25). v2 grades the
+# verdict on content only, keeps citations in their own field, and calls an answer partial only
+# when what is missing changes the practical answer.
+RUBRIC_VERSION = "v2"
+
 JUDGE_SYSTEM = """\
 Você avalia respostas de um assistente sobre a regulação da saúde suplementar (normas da ANS).
 Você recebe: a pergunta, a resposta de referência escrita por um especialista, se a pergunta tem \
 resposta na base de normas, a resposta do sistema e os trechos que o sistema citou.
 
-Critérios:
-- Compare o CONTEÚDO com a referência (prazos, números, condições, exceções). Formulação diferente \
-não é erro.
-- "correct": todos os pontos essenciais da referência estão presentes e nada contradiz a referência.
-- "partial": o que foi dito está certo, mas falta um ponto essencial.
-- "incorrect": contradiz a referência, inventa regra, cita a norma errada como base, ou responde \
-algo que não está na base quando a pergunta NÃO tem resposta na base.
-- Se a pergunta NÃO tem resposta na base, a resposta certa é recusar (dizer que as normas \
-fornecidas não tratam do assunto): isso é "correct" com refused=true.
-- Se a pergunta TEM resposta na base e o sistema recusou: "incorrect" com refused=true.
-- citations_supported: verifique só se os trechos citados sustentam as afirmações feitas; null se \
-não houver citações.
-Seja rigoroso e consistente."""
+Você dá duas avaliações SEPARADAS:
+
+1) verdict — só sobre o CONTEÚDO da resposta, comparado com a referência:
+- "correct": a resposta prática à pergunta está certa (o sim/não, o prazo, o valor, a condição \
+principal) e nada do que ela afirma contradiz a referência. Formulação diferente não é erro. \
+Detalhes da referência que não mudam a resposta prática podem faltar.
+- "partial": o que ela afirma está certo, mas falta algo que muda a resposta prática (uma \
+condição, exceção ou segunda parte da pergunta sem a qual a pessoa agiria errado).
+- "incorrect": afirma algo que contradiz a referência (prazo, valor, sanção, regra errados), \
+inventa uma regra, ou diz que a base não responde quando ela responde.
+- Citar a norma ou o artigo errado NÃO muda o verdict se o conteúdo está certo: isso é avaliado \
+em citations_supported.
+- Pergunta SEM resposta na base: "correct" se o sistema diz que as normas fornecidas não trazem \
+essa informação, mesmo que acrescente ressalvas ou sugira onde procurar; "incorrect" se ele \
+afirma uma resposta definitiva como se estivesse nas normas.
+
+2) citations_supported — os trechos citados sustentam as afirmações feitas? true/false; null se \
+não há citações.
+
+refused = true se o sistema disse que não sabe / que a base não traz a resposta.
+Seja consistente: avalie o que a resposta afirma, não o tom."""
 
 
 def judge_prompt(question: str, reference: str, answerable: bool, answer: str, cited: dict[int, str]) -> str:

@@ -1,0 +1,20 @@
+{
+ "n": 50,
+ "answer_correct": 0.4286,
+ "answer_correct_or_partial": 0.7429,
+ "direct_correct": 0.55,
+ "multi_hop_correct": 0.2667,
+ "recall_at_5": 0.6571,
+ "mrr": 0.5714,
+ "refusal_recall": 0.9333,
+ "refusal_precision": 0.875,
+ "wrongful_refusal": 0.0571,
+ "citations_supported": 0.6857,
+ "latency_p50_s": 28.47,
+ "latency_p95_s": 46.1,
+ "cost_per_question_usd": 0.0,
+ "run": "v0_sample50_rubric-v2",
+ "regraded_from": "v0_baseline",
+ "judge_rubric": "v2",
+ "judge": "claude-code:claude-haiku-5-5"
+}
