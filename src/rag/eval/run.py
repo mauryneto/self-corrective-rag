@@ -20,7 +20,7 @@ from datetime import datetime
 
 from rag.config import ROOT, get_settings
 from rag.eval.dataset import Question, load_questions
-from rag.eval.judge import DEFAULT_JUDGE_MODEL, get_judge, grade
+from rag.eval.judge import DEFAULT_JUDGE_MODEL, RUBRIC_VERSION, get_judge, grade
 from rag.eval.metrics import retrieval_scores, summarize
 
 RUNS_DIR = ROOT / "eval" / "runs"
@@ -116,6 +116,7 @@ def main() -> None:
     failed = len(results) - len(graded)
     summary = summarize(graded) | {
         "run": name, "version": args.version, "judge": f"{args.judge_backend}:{args.judge_model}",
+        "judge_rubric": RUBRIC_VERSION,
         "llm_provider": get_settings().llm_provider,
         "llm_model": getattr(pipeline.llm, "model", None), "embed_model": get_settings().embed_model,
         "top_k": get_settings().top_k, "judge_failures": failed, "date": datetime.now().isoformat(timespec="seconds"),
