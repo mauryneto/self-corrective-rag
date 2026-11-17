@@ -5,9 +5,9 @@ national regulator). An LLM judge checks every answer; failed answers trigger qu
 decomposition; questions the corpus can't answer are declined. Every design choice is backed by an
 ablation on a fixed eval set, reporting accuracy, refusal precision, latency and cost per query.
 
-> **Status: work in progress (end of week 2 of 4).** Corpus pipeline with incremental updates,
-> index, baseline (V0), a 180-question eval set, and a judge validated against human labels.
-> Hybrid search, the self-corrective loop and the guardrail come next.
+> **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
+> 180-question eval set, a judge validated against human labels, V0 (baseline) and V1 (hybrid
+> search + reranker) measured. The self-corrective loop and the guardrail come next.
 
 ## Results
 
@@ -16,11 +16,12 @@ Measured on the 180-question eval set (`eval/runs/`). Each new version gets a ro
 | Version | Correct | Correct + partial | Multi-hop correct | Recall@5 | MRR | Declines when it should | Refusal precision | Citations supported | p50 / p95 latency | Cost / question |
 |---|---|---|---|---|---|---|---|---|---|---|
 | V0 | 56% | 82% | 22% | 73% | 0.61 | 98% | 92% | 66% | 28s / 44s | US$ 0 (local) |
+| V1 | 63% | 82% | 32% | 82% | 0.77 | 93% | 95% | 68% | 36s / 58s | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
-refusal columns over the 60 it should decline. V0 answers with `qwen2.5:14b` on a laptop GPU
-(RTX 5070, 8 GB), hence the latency and zero cost. Judge: Claude Haiku 5.5, rubric v2 (validated
-below).
+refusal columns over the 60 it should decline. Every version answers with the same prompt and
+`qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB), hence the latency and zero cost; only what the
+row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below).
 
 **What V0 shows:**
 - **Multi-hop is the weak spot: 22% correct, against 72% on direct questions.** Retrieval finds
@@ -32,6 +33,39 @@ below).
   answerable questions wrongly declined.
 - **Citations: 66% supported.** The local model sometimes fills gaps from memory and attributes
   rules to revoked norms (e.g. RN 259 instead of RN 566).
+
+**What V1 shows** (hybrid search + cross-encoder reranker; same prompt and model as V0):
+- **Better retrieval turns into better answers: 56% → 63% correct**, multi-hop 22% → 32%,
+  direct 72% → 79%. Recall@5 73% → 82%, MRR 0.61 → 0.77.
+- **The reranker did the work, not the hybrid fusion.** In the retrieval-only ablation below,
+  fusing BM25 with the vectors did not beat vector search on this corpus (bge-m3 is already
+  strong and BM25 adds noise); the 568M multilingual cross-encoder is what moved recall.
+- **A trade-off appeared in declining: 98% → 93%.** With more relevant-looking passages in the
+  prompt, the model answers some questions it should decline. That is the job of V3's guardrail.
+- **It costs latency:** the reranker runs on CPU (~10 s per question), p50 28 s → 36 s. Cutting
+  that is part of V4.
+- **Multi-hop is still the weak spot** (32%): even with a better ranking, a single search for a
+  question that needs two norms finds every needed article for only 16 of 40. That is V2's job:
+  decompose the question and search again.
+
+### Retrieval ablation (V1 design)
+
+Retrieval-only eval on the 120 answerable questions (`python -m rag.eval.retrieval_eval`; no
+answer generated, so each setup takes seconds to minutes). "Complete" = multi-hop questions with
+every needed article in the top 5.
+
+| Retrieval | Recall@5 | MRR | Direct | Multi-hop | Complete |
+|---|---|---|---|---|---|
+| Vector, bge-m3 (V0) | 0.733 | 0.611 | 0.850 | 0.498 | 8/40 |
+| Lexical, Postgres `ts_rank` | 0.083 | 0.046 | 0.087 | 0.075 | 1/40 |
+| Lexical, BM25 | 0.597 | 0.502 | 0.675 | 0.442 | 8/40 |
+| Hybrid (RRF) | 0.703 | 0.620 | 0.787 | 0.533 | 11/40 |
+| Hybrid, BM25 weight 0.3 | 0.726 | 0.643 | 0.838 | 0.504 | 8/40 |
+| Hybrid + mMiniLM reranker (118M) | 0.708 | 0.623 | 0.800 | 0.525 | 10/40 |
+| **Hybrid + bge-reranker-v2-m3 (568M), top 20 (V1)** | **0.817** | **0.767** | **0.913** | **0.625** | **16/40** |
+
+Postgres `ts_rank` has no notion of how rare a term is, so the words every norm uses
+("operadora", "plano") dominated; BM25 over the same stemmed lexemes fixed that.
 
 ## Judge validation
 
@@ -63,7 +97,7 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | Version | What it adds | Status |
 |---|---|---|
 | V0 | Naive RAG: vector search only | ✅ |
-| V1 | Hybrid search (vector + full-text) and a reranker | ⏳ |
+| V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
 | V2 | Self-corrective loop: LLM judge, query rewriting and decomposition | ⏳ |
 | V3 | Scope guardrail: decline what the corpus can't answer | ⏳ |
 | V4 | Optimized loop: cheaper judge, early exit, caching | ⏳ |
@@ -157,8 +191,13 @@ validated against human labels (see Judge validation).
 - **Structural chunking.** Chunks follow the legal structure (one article, split at paragraph
   boundaries only when too long) and carry a header with the norm and article number, so a
   retrieved chunk is citable on its own.
-- **Postgres for both search legs.** pgvector for embeddings and Postgres full-text search
-  (Portuguese configuration) for the lexical leg, so hybrid search is one database, not two.
+- **Postgres for both search legs, BM25 in memory.** pgvector for embeddings; for the lexical leg,
+  Postgres' Portuguese stemmer produces the terms and BM25 ranks them in memory (the corpus is a
+  few thousand chunks), because Postgres' own ranking has no IDF.
+- **Measure retrieval on its own first.** A retrieval-only eval (Recall@5, MRR, seconds per
+  setup) chose V1's design before paying for a full eval run with generation and judging.
+- **A small local model on purpose.** Every version answers with the same 14B local model, so the
+  table shows how much the architecture improves a small model, not how good a frontier model is.
 - **Local embeddings.** `bge-m3` is multilingual and runs locally through Ollama: re-indexing
   costs nothing and the eval's cost numbers only reflect the LLM calls.
 - **Provider-agnostic LLM layer.** Every call records tokens, latency and estimated cost, so the
