@@ -116,3 +116,11 @@ class Store:
         ).fetchall()
         by_id = {r[0]: r for r in rows}
         return [Hit(*by_id[cid], score) for cid, score in ranked if cid in by_id]
+
+    def get_hits(self, chunk_ids: list[str]) -> list[Hit]:
+        """Chunks by id, in the given order (score 0). Used to replay stored retrieval results."""
+        rows = self.conn.execute(
+            "SELECT chunk_id, doc_id, unit, text, source_url FROM chunks WHERE chunk_id = ANY(%s)", (chunk_ids,)
+        ).fetchall()
+        by_id = {r[0]: r for r in rows}
+        return [Hit(*by_id[cid], 0.0) for cid in chunk_ids if cid in by_id]

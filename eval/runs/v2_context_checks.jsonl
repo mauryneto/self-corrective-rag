@@ -1,0 +1,120 @@
+{"id": "q001", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 19.86}
+{"id": "q002", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.98}
+{"id": "q003", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.18}
+{"id": "q004", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.15}
+{"id": "q005", "check": {"sufficient": false, "missing": "A resposta não especifica se a operadora pode informar que a solicitação está 'em análise' como uma resposta válida.", "queries": ["prazos máximos para resposta de solicitações de cobertura assistencial", "regras para comunicação de análise de solicitação de cobertura"]}, "latency_s": 21.77}
+{"id": "q006", "check": {"sufficient": false, "missing": "A resposta exata sobre a cobertura de tratamentos experimentais não está clara nos trechos fornecidos.", "queries": ["cobertura de tratamentos clínicos ou cirúrgicos experimentais", "exceções para tratamentos experimentais", "cobertura de procedimentos não registrados ou não regularizados"]}, "latency_s": 23.87}
+{"id": "q007", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.95}
+{"id": "q008", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.28}
+{"id": "q011", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 19.75}
+{"id": "q012", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.4}
+{"id": "q013", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.07}
+{"id": "q014", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.91}
+{"id": "q015", "check": {"sufficient": false, "missing": "A pergunta não foi respondida completamente, pois não está claro se o beneficiário atende a todos os requisitos além do tempo de permanência.", "queries": ["prazo mínimo de permanência para primeira portabilidade de carências", "requisitos adicionais para portabilidade de carências além do tempo de permanência"]}, "latency_s": 46.81}
+{"id": "q016", "check": {"sufficient": false, "missing": "O trecho não especifica se o pedido pode ser feito durante a internação, exceto pelas exceções mencionadas.", "queries": ["portabilidade de carências durante internação exceções artigo 5"]}, "latency_s": 24.36}
+{"id": "q017", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 30.18}
+{"id": "q018", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 16.7}
+{"id": "q019", "check": {"sufficient": false, "missing": "Não está claro se a remoção pode ocorrer sem o consentimento do beneficiário em todas as circunstâncias.", "queries": ["condições para remoção sem consentimento do beneficiário"]}, "latency_s": 24.45}
+{"id": "q020", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 14.67}
+{"id": "q021", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.51}
+{"id": "q022", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.83}
+{"id": "q023", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.16}
+{"id": "q024", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.79}
+{"id": "q025", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.3}
+{"id": "q026", "check": {"sufficient": false, "missing": "A pergunta precisa saber se há defasagem superior a dois meses e quais são as consequências para a cobrança retroativa.", "queries": ["defasagem superior a dois meses reajuste cobrança retroativa", "cobrança retroativa reajuste plano individual"]}, "latency_s": 20.67}
+{"id": "q027", "check": {"sufficient": false, "missing": "Não está claro se o reajuste para planos empresariais com 8 vidas é calculado individualmente ou se é aplicado um percentual único para todo o agrupamento de contratos coletivos.", "queries": ["reajuste único para contratos coletivos empresariais", "base de cálculo individual para reajuste de planos empresariais", "regras de reajuste para planos coletivos empresariais com poucas vidas"]}, "latency_s": 29.59}
+{"id": "q028", "check": {"sufficient": false, "missing": "Informações sobre a possibilidade de uma administradora de benefícios ter uma rede própria de clínicas para atender beneficiários de um plano coletivo por adesão.", "queries": ["proibição de administradora de benefícios ter rede própria para atendimento a beneficiários de plano coletivo por adesão"]}, "latency_s": 23.02}
+{"id": "q029", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.73}
+{"id": "q030", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.02}
+{"id": "q031", "check": {"sufficient": false, "missing": "Não está claro se a adesão após a contratação do plano coletivo por adesão, mas dentro de 30 dias do aniversário do contrato, isenta de carência.", "queries": ["condições de adesão sem cumprimento de carência após aniversário do contrato coletivo por adesão", "prazo limite para adesão sem carência em plano coletivo por adesão"]}, "latency_s": 28.61}
+{"id": "q032", "check": {"sufficient": false, "missing": "Não está claro se associações profissionais criadas há menos de um ano podem contratar planos coletivos por adesão.", "queries": ["prazo mínimo de constituição para associações profissionais contratarem planos coletivos por adesão"]}, "latency_s": 21.02}
+{"id": "q033", "check": {"sufficient": false, "missing": "A pergunta não foi completamente respondida, pois não há informações sobre o cancelamento automático do contrato para dependentes após a morte do titular.", "queries": ["eficácia do contrato familiar após falecimento do titular", "direitos dos dependentes após morte do titular do plano familiar", "condições contratuais após falecimento do beneficiário titular"]}, "latency_s": 24.42}
+{"id": "q034", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.48}
+{"id": "q035", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.49}
+{"id": "q036", "check": {"sufficient": false, "missing": "O trecho não especifica o percentual máximo de aumento da mensalidade após a adaptação de um plano antigo à Lei 9.656.", "queries": ["percentual máximo de reajuste para planos adaptados à Lei 9.656", "índice de reajuste para planos adaptados após 1999", "regras de reajuste para planos adaptados à Lei 9656"]}, "latency_s": 30.36}
+{"id": "q037", "check": {"sufficient": false, "missing": "Não há informações sobre como ou se é possível retornar ao contrato de origem após a migração, além do que já está mencionado.", "queries": ["retorno ao contrato de origem após migração"]}, "latency_s": 16.05}
+{"id": "q038", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.88}
+{"id": "q039", "check": {"sufficient": false, "missing": "Informações sobre a exclusividade do atendimento por médicos credenciados.", "queries": ["cláusula de exclusividade de atendimento médico credenciado"]}, "latency_s": 16.03}
+{"id": "q040", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.97}
+{"id": "q041", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.55}
+{"id": "q042", "check": {"sufficient": false, "missing": "Os trechos fornecem informações sobre o conhecimento expresso do beneficiário sobre a natureza experimental do projeto e a possibilidade de retorno ao contrato anterior, mas não detalham todas as garantias específicas que um beneficiário tem durante a participação no projeto de sandbox.", "queries": ["garantias para beneficiários de planos de saúde em sandbox regulatório", "direitos e proteções para beneficiários em projetos sandbox", "condições e limites de proteção para beneficiários em sandbox regulatório"]}, "latency_s": 31.44}
+{"id": "q043", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.39}
+{"id": "q044", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.45}
+{"id": "q045", "check": {"sufficient": false, "missing": "Não há informações sobre o prazo de notificação e a data exata em que o desconto é cancelado.", "queries": ["prazo de notificação para encerramento de programa de promoção da saúde", "data de cessação da bonificação após notificação de encerramento do programa"]}, "latency_s": 20.14}
+{"id": "q046", "check": {"sufficient": false, "missing": "A pergunta não é completamente respondida, pois não há detalhes sobre como a ANS compõe o índice máximo de reajuste.", "queries": ["cálculo do Índice Máximo de Reajuste Anual das Contraprestações Pecuniárias dos Planos Privados de Assistência à Saúde"]}, "latency_s": 22.16}
+{"id": "q047", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.07}
+{"id": "q048", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.7}
+{"id": "q049", "check": {"sufficient": false, "missing": "A operadora não pode oferecer apenas um número de telefone pago como canal único de acesso à ouvidoria.", "queries": ["canal único de acesso à ouvidoria"]}, "latency_s": 23.32}
+{"id": "q050", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.65}
+{"id": "q051", "check": {"sufficient": false, "missing": "O trecho não especifica se quatro meses de suspensão é considerado temporária e se está dentro do prazo máximo de 180 dias mencionado.", "queries": ["prazo de suspensão temporária de atendimento hospitalar", "obrigação de solicitar redimensionamento de rede ou comunicar substituição para suspensão de quatro meses"]}, "latency_s": 31.91}
+{"id": "q052", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.21}
+{"id": "q053", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.52}
+{"id": "q054", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.04}
+{"id": "q055", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.5}
+{"id": "q056", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.01}
+{"id": "q057", "check": {"sufficient": false, "missing": "Falta a especificação dos limites para planos contratados em 2015.", "queries": ["limites de variação de preço por faixa etária para planos contratados em 2015"]}, "latency_s": 27.17}
+{"id": "q058", "check": {"sufficient": false, "missing": "O trecho não especifica o mês exato em que a mensalidade pode subir após o aniversário.", "queries": ["prazo máximo de atualização de mensalidade por mudança de faixa etária após aniversário"]}, "latency_s": 23.63}
+{"id": "q059", "check": {"sufficient": false, "missing": "Os trechos não mencionam explicitamente que perguntas sobre hábitos de vida, sintomas ou uso de medicamentos não são permitidas na Declaração de Saúde, embora o parágrafo único do Art. 10 indique que a declaração deve se referir apenas a doenças ou lesões conhecidas pelo beneficiário.", "queries": ["proibição de perguntas sobre hábitos de vida na declaração de saúde"]}, "latency_s": 42.61}
+{"id": "q060", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.16}
+{"id": "q061", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.71}
+{"id": "q062", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.11}
+{"id": "q063", "check": {"sufficient": false, "missing": "A pergunta precisa saber se uma única mensalidade atrasada é suficiente para rescisão unilateral do contrato por inadimplência.", "queries": ["prazo mínimo de inadimplência para rescisão unilateral do contrato"]}, "latency_s": 19.26}
+{"id": "q064", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.61}
+{"id": "q065", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.75}
+{"id": "q066", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.73}
+{"id": "q067", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.05}
+{"id": "q068", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.92}
+{"id": "q069", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.46}
+{"id": "q070", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.7}
+{"id": "q071", "check": {"sufficient": false, "missing": "Não está claro se a operadora de pequeno porte deve ter atendimento telefônico 24 horas para casos específicos de urgência e emergência.", "queries": ["prazo máximo de atendimento para casos de urgência e emergência em operadoras de pequeno porte"]}, "latency_s": 19.88}
+{"id": "q072", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.8}
+{"id": "q073", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.07}
+{"id": "q074", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.51}
+{"id": "q075", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.01}
+{"id": "q076", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.84}
+{"id": "q077", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.85}
+{"id": "q078", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.35}
+{"id": "q079", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.25}
+{"id": "q080", "check": {"sufficient": false, "missing": "Não está claro se é permitido ao beneficiário pagar diretamente ao prestador procedimentos em pós-pagamento.", "queries": ["pagamento diretamente ao prestador para procedimentos odontológicos em pós-pagamento"]}, "latency_s": 20.13}
+{"id": "q081", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.71}
+{"id": "q082", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.44}
+{"id": "q083", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.96}
+{"id": "q084", "check": {"sufficient": false, "missing": "Informações sobre a vigência atual da RN 433 ou se ela foi substituída por outra norma.", "queries": ["RN 434 que revoga RN 433", "vigência atual de regras sobre coparticipação e franquia"]}, "latency_s": 30.84}
+{"id": "q085", "check": {"sufficient": false, "missing": "Não há informações sobre prazos específicos para portabilidade de carências em casos de saída de patrocinador.", "queries": ["prazo para exercício da portabilidade especial de carências após saída de patrocinador", "condições para portabilidade de carências em caso de saída de patrocinador"]}, "latency_s": 39.24}
+{"id": "q086", "check": {"sufficient": false, "missing": "Os trechos não especificam o que o beneficiário precisa fazer com o plano antigo após a portabilidade de carências e nem mencionam até quando o beneficiário deve continuar pagando a mensalidade do plano antigo.", "queries": ["o que fazer com o plano de origem após a portabilidade de carências", "prazo para cancelamento do plano de origem após portabilidade", "obrigação de pagamento de mensalidades do plano de origem após portabilidade"]}, "latency_s": 45.78}
+{"id": "q087", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 12.01}
+{"id": "q088", "check": {"sufficient": false, "missing": "Não está claro se o aporte extra cobrado dos associados é considerado reajuste ou se fere a regra de reajuste anual dos planos coletivos.", "queries": ["definição de reajuste em planos operados por autogestão", "regra de reajuste anual para planos coletivos", "exceções à regra de reajuste anual para planos coletivos operados por entidades de autogestão"]}, "latency_s": 40.76}
+{"id": "q089", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.07}
+{"id": "q090", "check": {"sufficient": false, "missing": "Os trechos não especificam quais documentos de acompanhamento e orientação da gestação a beneficiária tem direito de receber além da Nota de Orientação à Gestante e do Cartão da Gestante.", "queries": ["direitos de beneficiária de plano de saúde em relação à Nota de Orientação à Gestante", "documentos de acompanhamento da gestação além do Cartão da Gestante", "informações obrigatórias na Nota de Orientação à Gestante"]}, "latency_s": 42.21}
+{"id": "q091", "check": {"sufficient": false, "missing": "Não está claro se a remoção para um hospital particular que não é credenciado é obrigatória.", "queries": ["condições para remoção para hospital particular não credenciado", "exceções para remoção para hospital não credenciado", "princípios gerais para remoção entre hospitais não credenciados"]}, "latency_s": 30.67}
+{"id": "q092", "check": {"sufficient": false, "missing": "Não está claro se é possível cancelar o plano atual antes de solicitar a portabilidade de carências.", "queries": ["prazo para solicitar cancelamento de plano de saúde antes da portabilidade de carências", "ordem de solicitação entre cancelamento de plano e portabilidade de carências"]}, "latency_s": 28.16}
+{"id": "q093", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.85}
+{"id": "q094", "check": {"sufficient": false, "missing": "Informações sobre reajuste de coparticipação em planos individuais e exclusivamente odontológicos além do que está no artigo 21.", "queries": ["regra para reajuste de coparticipação em planos individuais", "regra para reajuste de coparticipação em planos exclusivamente odontológicos", "relação entre reajuste de mensalidade e coparticipação em planos individuais"]}, "latency_s": 39.45}
+{"id": "q095", "check": {"sufficient": false, "missing": "A definição exata de região de saúde e a lista de municípios que fazem parte de cada região.", "queries": ["definição de região de saúde na RN 566", "municípios que fazem parte de cada região de saúde", "critérios para constituição de região de saúde na RN 566"]}, "latency_s": 32.3}
+{"id": "q096", "check": {"sufficient": false, "missing": "Informações sobre a aplicação retroativa ou a necessidade de adaptação de planos antigos às novas regras.", "queries": ["aplicação retroativa da RN 487 para planos de saúde antigos", "necessidade de adaptação de planos de saúde antigos às novas regras de contrato acessório de medicação de uso domiciliar"]}, "latency_s": 32.68}
+{"id": "q097", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.91}
+{"id": "q098", "check": {"sufficient": false, "missing": "A pergunta não foi completamente respondida. Falta especificar se o plano pode ser reajustado duas vezes no mesmo ano e por quanto tempo o índice máximo de reajuste divulgado pela ANS é válido.", "queries": ["possibilidade de reajuste duplo em um mesmo ano para planos individuais", "vigência máxima do índice de reajuste máximo divulgado pela ANS"]}, "latency_s": 44.98}
+{"id": "q099", "check": {"sufficient": false, "missing": "Não está claro se há um prazo específico para a continuidade do tratamento em casos de rescisão de contrato que afeta beneficiários em tratamento contínuo.", "queries": ["prazo para continuidade do tratamento em caso de rescisão de contrato", "obrigação de operadora garantir continuidade do tratamento após rescisão de contrato", "procedimentos para beneficiários em tratamento contínuo em caso de rescisão de contrato"]}, "latency_s": 35.72}
+{"id": "q100", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.54}
+{"id": "q101", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 12.89}
+{"id": "q102", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.71}
+{"id": "q103", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 6.62}
+{"id": "q104", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.17}
+{"id": "q105", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.1}
+{"id": "q106", "check": {"sufficient": false, "missing": "O trecho não especifica por quanto tempo posso continuar no plano após ser demitido sem justa causa e optar por continuar pagando a mensalidade diretamente à operadora. Além disso, não está claro se a operadora pode excluir o beneficiário por inadimplência sem notificá-lo primeiro.", "queries": ["período mínimo de manutenção do beneficiário após demissão sem justa causa", "prazo para notificação da inadimplência antes da exclusão do beneficiário"]}, "latency_s": 31.94}
+{"id": "q107", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 9.23}
+{"id": "q108", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.31}
+{"id": "q109", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 10.41}
+{"id": "q110", "check": {"sufficient": false, "missing": "Os trechos fornecem informações sobre a substituição de prestadores de serviços não hospitalares e entidades hospitalares, mas não detalham especificamente as diferenças entre a substituição de laboratórios e de hospitais em termos de prazos de aviso prévio e comunicação.", "queries": ["prazo de aviso prévio para substituição de laboratório", "prazo de aviso prévio para substituição de entidade hospitalar", "quem precisa ser comunicado em substituição de laboratório", "quem precisa ser comunicado em substituição de entidade hospitalar"]}, "latency_s": 37.13}
+{"id": "q111", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.94}
+{"id": "q112", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.08}
+{"id": "q113", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 8.31}
+{"id": "q114", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.55}
+{"id": "q115", "check": {"sufficient": false, "missing": "O prazo normal de resposta para a solicitação de cirurgia e o prazo para informar o resultado da junta médica após sua conclusão.", "queries": ["prazo máximo de resposta para solicitação de cirurgia", "prazo para informar resultado da junta médica após conclusão"]}, "latency_s": 21.68}
+{"id": "q116", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 11.14}
+{"id": "q117", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.14}
+{"id": "q118", "check": {"sufficient": false, "missing": "A pergunta não foi completamente respondida, pois não há informações sobre a obrigação de fornecer informações por escrito e as sanções específicas para o descumprimento dessa obrigação.", "queries": ["requisitos para fornecimento de informações por escrito", "sanções para descumprimento de fornecimento de informações por escrito"]}, "latency_s": 21.85}
+{"id": "q119", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.58}
+{"id": "q120", "check": {"sufficient": false, "missing": "O prazo específico para concluir a alienação compulsória quando a operadora está sob Direção Técnica e se a ANS pode manter acompanhamento presencial durante a transferência não está claro nos trechos fornecidos.", "queries": ["prazo máximo para alienação compulsória sob Direção Técnica", "acompanhamento presencial da ANS durante transferência de carteira sob Direção Técnica"]}, "latency_s": 28.48}
+{"id": "q121", "check": {"sufficient": true, "missing": "", "queries": []}, "latency_s": 7.45}
+{"id": "q122", "check": {"sufficient": false, "missing": "A pergunta não especifica qual infração e sanção específica a operadora incorrerá por não seguir as regras da junta médica, como o descumprimento da notificação ao paciente.", "queries": ["infração e sanção por não notificar o paciente na formação da junta médica", "regras da RN 424 sobre notificação ao paciente na junta médica e suas consequências", "sanções previstas na RN 489 para descumprimento de regras de contratação de rede de prestação de serviços"]}, "latency_s": 32.09}

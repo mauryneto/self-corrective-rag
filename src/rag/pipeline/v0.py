@@ -29,6 +29,7 @@ class Answer:
     latency_s: float
     usage: Usage = field(default_factory=Usage)
     retrieval_latency_s: float = 0.0
+    trace: dict = field(default_factory=dict)  # what the self-corrective steps did (V2+)
 
 
 def cited_indexes(text: str, n_sources: int) -> list[int]:

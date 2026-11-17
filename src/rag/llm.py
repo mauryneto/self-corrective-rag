@@ -10,6 +10,7 @@ import time
 from typing import Protocol
 
 import httpx
+from pydantic import BaseModel
 
 from rag.config import get_settings
 from rag.costs import CallRecord
@@ -25,6 +26,9 @@ class LLM(Protocol):
 
     def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]: ...
 
+    def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
+                                    max_tokens: int = 1024) -> tuple[M, CallRecord]: ...
+
 
 class OllamaLLM:
     def __init__(self, model: str | None = None, url: str | None = None):
@@ -33,19 +37,19 @@ class OllamaLLM:
         self.url = (url or s.ollama_url).rstrip("/")
         self.client = httpx.Client(timeout=600)
 
-    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]:
+    def _chat(self, system: str, prompt: str, step: str, max_tokens: int, fmt: dict | None) -> tuple[str, CallRecord]:
         t0 = time.perf_counter()
+        body = {
+            "model": self.model,
+            "stream": False,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+            "options": {"temperature": 0, "num_predict": max_tokens, "num_ctx": 16384},
+        }
+        if fmt is not None:
+            body["format"] = fmt  # structured output: Ollama constrains decoding to this JSON schema
 
         def call() -> dict:
-            resp = self.client.post(
-                f"{self.url}/api/chat",
-                json={
-                    "model": self.model,
-                    "stream": False,
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-                    "options": {"temperature": 0, "num_predict": max_tokens, "num_ctx": 16384},
-                },
-            )
+            resp = self.client.post(f"{self.url}/api/chat", json=body)
             resp.raise_for_status()
             return resp.json()
 
@@ -58,6 +62,14 @@ class OllamaLLM:
             latency_s=time.perf_counter() - t0,
         )
         return data["message"]["content"], record
+
+    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]:
+        return self._chat(system, prompt, step, max_tokens, None)
+
+    def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
+                                    max_tokens: int = 1024) -> tuple[M, CallRecord]:
+        text, record = self._chat(system, prompt, step, max_tokens, schema.model_json_schema())
+        return schema.model_validate_json(text), record
 
 
 class AnthropicLLM:
@@ -93,6 +105,22 @@ class AnthropicLLM:
             raise LLMRefusal(getattr(response.stop_details, "category", None) or "refusal")
         text = "".join(b.text for b in response.content if b.type == "text")
         return text, record
+
+    def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
+                                    max_tokens: int = 4000) -> tuple[M, CallRecord]:
+        t0 = time.perf_counter()
+        response = self.client.messages.parse(
+            model=self.model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": prompt}],
+            output_format=schema,
+        )
+        record = CallRecord(step, response.model, response.usage.input_tokens, response.usage.output_tokens,
+                            time.perf_counter() - t0)
+        if response.stop_reason == "refusal" or response.parsed_output is None:
+            raise LLMRefusal(f"no structured output (stop_reason={response.stop_reason})")
+        return response.parsed_output, record
 
 
 def get_llm() -> LLM:

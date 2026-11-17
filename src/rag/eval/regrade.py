@@ -3,7 +3,8 @@
     uv run python -m rag.eval.regrade --run v0_baseline [--ids-from eval/judge_labels.json] [--out NAME]
 
 Used after changing the judge rubric: the answers stay identical, only the verdicts change, so
-the effect of the rubric can be measured on its own. Writes ``eval/runs/<out>.jsonl`` and its
+the effect of the rubric can be measured on its own. With ``--drafts`` (V2+), it grades the drafts
+the answer check rewrote instead, which measures that step on its own. Writes ``eval/runs/<out>.jsonl`` and its
 summary (the default name is ``<run>_rubric-<version>``).
 """
 
@@ -29,10 +30,18 @@ def main() -> None:
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--drafts", action="store_true",
+                        help="V2+: grade the first draft of every answer the answer check rewrote (the rest are kept "
+                             "as graded), i.e. the same run without the answer-check step")
     args = parser.parse_args()
 
     rows = [json.loads(line) for line in (RUNS_DIR / f"{args.run}.jsonl").read_text(encoding="utf-8").splitlines()
             if line.strip()]
+    kept: list[dict] = []
+    if args.drafts:
+        kept = [r for r in rows if "draft" not in r.get("trace", {})]
+        rows = [r | {"answer": r["trace"]["draft"], "cited": r["trace"]["draft_cited"]}
+                for r in rows if "draft" in r.get("trace", {})]
     if args.ids_from:
         wanted = set(json.loads(args.ids_from.read_text(encoding="utf-8")))
         rows = [r for r in rows if r["id"] in wanted]
@@ -55,8 +64,11 @@ def main() -> None:
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         out_rows = list(pool.map(regrade, rows))
+    if kept:
+        order = {q: i for i, q in enumerate(questions)}
+        out_rows = sorted(out_rows + kept, key=lambda r: order[r["id"]])
 
-    name = args.out or f"{args.run}_rubric-{RUBRIC_VERSION}"
+    name = args.out or (f"{args.run}_drafts" if args.drafts else f"{args.run}_rubric-{RUBRIC_VERSION}")
     (RUNS_DIR / f"{name}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in out_rows),
                                             encoding="utf-8")
     source_summary = RUNS_DIR / f"{args.run}.summary.json"

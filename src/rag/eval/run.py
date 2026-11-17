@@ -35,18 +35,26 @@ def get_pipeline(version: str):
         from rag.pipeline.v1 import V1Pipeline
 
         return V1Pipeline()
+    if version == "v2":
+        from rag.pipeline.v2 import V2Pipeline
+
+        return V2Pipeline()
     raise SystemExit(f"unknown pipeline version: {version}")
 
 
 def answer_record(q: Question, answer) -> dict:
     sources = [{"index": i, "chunk_id": h.chunk_id, "doc_id": h.doc_id, "unit": h.unit, "score": round(h.score, 4)}
                for i, h in enumerate(answer.sources, 1)]
-    recall, rr = retrieval_scores([g.model_dump() for g in q.gold], sources) if q.gold else (None, None)
+    gold = [g.model_dump() for g in q.gold]
+    recall, rr = retrieval_scores(gold, sources) if gold else (None, None)
+    # share of the gold articles anywhere in the prompt (V2 can add passages after the first 6)
+    context_recall = retrieval_scores(gold, sources, k=len(sources))[0] if gold else None
     return {
         "id": q.id, "type": q.type, "question": q.question, "answer": answer.answer,
-        "cited": answer.cited, "sources": sources, "recall_at_5": recall, "rr": rr,
+        "cited": answer.cited, "sources": sources, "recall_at_5": recall, "rr": rr, "context_recall": context_recall,
         "latency_s": round(answer.latency_s, 3), "retrieval_latency_s": round(answer.retrieval_latency_s, 3),
         "cost_usd": answer.usage.cost_usd, "usage": answer.usage.summary(),
+        **({"trace": answer.trace} if answer.trace else {}),
     }
 
 

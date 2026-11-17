@@ -51,6 +51,9 @@ def summarize(results: list[dict]) -> dict:
                                   lambda r: r["verdict"] == "correct"),
         "recall_at_5": round(statistics.mean(r["recall_at_5"] for r in answerable), 4) if answerable else None,
         "mrr": round(statistics.mean(r["rr"] for r in answerable), 4) if answerable else None,
+        "context_recall": (round(statistics.mean(cr), 4)
+                           if (cr := [r["context_recall"] for r in answerable if r.get("context_recall") is not None])
+                           else None),
         "refusal_recall": rate(declinable, lambda r: r["refused"]),  # declined what it should
         "refusal_precision": round(len(correct_refusals) / len(refused_all), 4) if refused_all else None,
         "wrongful_refusal": rate(answerable, lambda r: r["refused"]),  # declined what it could answer

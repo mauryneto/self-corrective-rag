@@ -6,8 +6,9 @@ decomposition; questions the corpus can't answer are declined. Every design choi
 ablation on a fixed eval set, reporting accuracy, refusal precision, latency and cost per query.
 
 > **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
-> 180-question eval set, a judge validated against human labels, V0 (baseline) and V1 (hybrid
-> search + reranker) measured. The self-corrective loop and the guardrail come next.
+> 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
+> search + reranker) and V2 (self-corrective loop) measured, together with the run-to-run noise
+> that every comparison has to clear. The guardrail comes next.
 
 ## Results
 
@@ -17,11 +18,30 @@ Measured on the 180-question eval set (`eval/runs/`). Each new version gets a ro
 |---|---|---|---|---|---|---|---|---|---|---|
 | V0 | 56% | 82% | 22% | 73% | 0.61 | 98% | 92% | 66% | 28s / 44s | US$ 0 (local) |
 | V1 | 63% | 82% | 32% | 82% | 0.77 | 93% | 95% | 68% | 36s / 58s | US$ 0 (local) |
+| V1, run again | 60% | 82% | 40% | 82% | 0.77 | 95% | 97% | 66% | 51s / 73s | US$ 0 (local) |
+| V2 | 62% | 84% | 25% | 82% | 0.77 | 97% | 97% | 67% | 88s / 192s | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
 refusal columns over the 60 it should decline. Every version answers with the same prompt and
 `qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB), hence the latency and zero cost; only what the
 row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below).
+
+**Read the rows against the noise.** "V1, run again" is the same code, data and settings run a
+second time. Local generation is not bit-for-bit reproducible even at temperature 0 (see below),
+so 141 of 180 answers come out worded differently and some flip between right and wrong: direct
+79% → 70%, multi-hop 32% → 40%. (The judge adds little of this: on the 39 identical answers it
+changed its verdict twice.) With 120 answerable questions, a single run cannot tell apart
+versions a few points apart. `python -m rag.eval.compare RUN_A RUN_B` does the paired comparison
+(questions gained and lost, McNemar's exact test):
+
+| Comparison | Correct (of 120) | Gained / lost | p |
+|---|---|---|---|
+| V1 vs. V1 run again (pure noise) | 76 → 72 | 7 / 11 | 0.48 |
+| V0 vs. V1 | 67 → 76 | 16 / 7 | 0.09 |
+| V1 vs. V2 | 76 → 75 | 12 / 13 | 1.00 |
+
+Retrieval metrics (Recall@5, MRR) are deterministic, so V1's retrieval gain is solid; its gain in
+correct answers is in the right direction but not significant on one run.
 
 **What V0 shows:**
 - **Multi-hop is the weak spot: 22% correct, against 72% on direct questions.** Retrieval finds
@@ -35,8 +55,9 @@ row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated bel
   rules to revoked norms (e.g. RN 259 instead of RN 566).
 
 **What V1 shows** (hybrid search + cross-encoder reranker; same prompt and model as V0):
-- **Better retrieval turns into better answers: 56% → 63% correct**, multi-hop 22% → 32%,
-  direct 72% → 79%. Recall@5 73% → 82%, MRR 0.61 → 0.77.
+- **Retrieval clearly improves: Recall@5 73% → 82%, MRR 0.61 → 0.77.** Correct answers go
+  56% → 63% (multi-hop 22% → 32%), in the expected direction but, as the noise check above shows,
+  not significant on a single run (p = 0.09).
 - **The reranker did the work, not the hybrid fusion.** In the retrieval-only ablation below,
   fusing BM25 with the vectors did not beat vector search on this corpus (bge-m3 is already
   strong and BM25 adds noise); the 568M multilingual cross-encoder is what moved recall.
@@ -47,6 +68,36 @@ row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated bel
 - **Multi-hop is still the weak spot** (32%): even with a better ranking, a single search for a
   question that needs two norms finds every needed article for only 16 of 40. That is V2's job:
   decompose the question and search again.
+
+**What V2 shows** (V1 plus a self-corrective loop, every step run by the same 14B model: check
+whether the passages cover the question and, if not, search for what is missing; check the
+answer against the passages it cites and rewrite it once if a claim is unsupported):
+- **No measurable gain in correct answers** (62% against 60–63% for V1's two runs), at 2.4× the
+  latency (p50 88 s): three to five LLM calls per question instead of one.
+- **Declining improves a little: 97%** of unanswerable and out-of-scope questions, against
+  93–95%. The context check is the useful part here: it flagged 43 of those 60 as "the passages
+  don't cover this", which is the signal V3's guardrail builds on.
+- **Decomposition finds little of what is missing.** In the retrieval-only check below, the
+  model flags 13 of the 22 multi-hop questions whose context is incomplete and writes sensible
+  follow-up queries, but those searches complete only 2 more of them (context recall 83% → 87%).
+- **Multi-hop is also a reasoning problem, not only a retrieval one.** Even with every needed
+  article in the prompt, the 14B model answers only about half of the multi-hop questions
+  correctly (V1: 9 of 18); with the extra passages V2 adds, 5 of 21. More context seems to
+  distract the small model more than it helps.
+- **The answer check helps a bit.** Grading the first drafts it rewrote (`regrade --drafts`):
+  without it, 61% correct and multi-hop 20%; with it, 62% and 25%; citations supported 64% → 67%.
+  Small numbers (30 rewritten answers), same caveat as above.
+
+Retrieval-only check of the decomposition step (`python -m rag.eval.context_check_eval`, replays
+V1's retrieval, 120 answerable questions; context recall = gold articles anywhere in the prompt):
+
+| Follow-up retrieval | Context recall | Multi-hop recall | Multi-hop complete | Passages in prompt |
+|---|---|---|---|---|
+| none (V1) | 0.832 | 0.646 | 18/40 | 6 |
+| 1 new passage per query | 0.860 | 0.704 | 20/40 | 6.6 |
+| **2 new passages per query (V2)** | **0.867** | **0.725** | **20/40** | **7.0** |
+| 3 new passages per query | 0.867 | 0.725 | 20/40 | 7.0 |
+| 2 per query, rerank pool 20 | 0.867 | 0.725 | 21/40 | 7.0 |
 
 ### Retrieval ablation (V1 design)
 
@@ -98,9 +149,9 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 |---|---|---|
 | V0 | Naive RAG: vector search only | ✅ |
 | V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
-| V2 | Self-corrective loop: LLM judge, query rewriting and decomposition | ⏳ |
+| V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: better declining, no gain in correct answers, 2.4× latency |
 | V3 | Scope guardrail: decline what the corpus can't answer | ⏳ |
-| V4 | Optimized loop: cheaper judge, early exit, caching | ⏳ |
+| V4 | Faster and reproducible: embeddings off the GPU so the generator stays loaded, deterministic generation, early exit | ⏳ |
 
 ## Corpus
 
@@ -196,6 +247,13 @@ validated against human labels (see Judge validation).
   few thousand chunks), because Postgres' own ranking has no IDF.
 - **Measure retrieval on its own first.** A retrieval-only eval (Recall@5, MRR, seconds per
   setup) chose V1's design before paying for a full eval run with generation and judging.
+- **Measure the noise before reading a difference.** The same version run twice moves direct
+  questions by 9 points, so every comparison is paired per question and tested, and a re-run of
+  an unchanged version sits in the results table. On this setup, local generation is reproducible
+  only when the model starts from a fresh load: Ollama reuses the cached start of the previous
+  prompt, which changes the floating-point rounding.
+- **Negative results stay in the table.** V2 did not pay for its latency with this model; the
+  table says so, and the eval shows which of its steps still earn their place.
 - **A small local model on purpose.** Every version answers with the same 14B local model, so the
   table shows how much the architecture improves a small model, not how good a frontier model is.
 - **Local embeddings.** `bge-m3` is multilingual and runs locally through Ollama: re-indexing
