@@ -5,9 +5,9 @@ national regulator). An LLM judge checks every answer; failed answers trigger qu
 decomposition; questions the corpus can't answer are declined. Every design choice is backed by an
 ablation on a fixed eval set, reporting accuracy, refusal precision, latency and cost per query.
 
-> **Status: work in progress (week 2 of 4).** Corpus pipeline with incremental updates, index,
-> baseline (V0), a 180-question eval set and its first measured results. The self-corrective loop
-> and the guardrail come next.
+> **Status: work in progress (end of week 2 of 4).** Corpus pipeline with incremental updates,
+> index, baseline (V0), a 180-question eval set, and a judge validated against human labels.
+> Hybrid search, the self-corrective loop and the guardrail come next.
 
 ## Results
 
@@ -15,24 +15,48 @@ Measured on the 180-question eval set (`eval/runs/`). Each new version gets a ro
 
 | Version | Correct | Correct + partial | Multi-hop correct | Recall@5 | MRR | Declines when it should | Refusal precision | Citations supported | p50 / p95 latency | Cost / question |
 |---|---|---|---|---|---|---|---|---|---|---|
-| V0 | 43% | 77% | 5% | 73% | 0.61 | 97% | 94% | 69% | 28s / 44s | US$ 0 (local) |
+| V0 | 56% | 82% | 22% | 73% | 0.61 | 98% | 92% | 66% | 28s / 44s | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
 refusal columns over the 60 it should decline. V0 answers with `qwen2.5:14b` on a laptop GPU
-(RTX 5070, 8 GB), hence the latency and zero cost. Judge: Claude Haiku 5.5.
+(RTX 5070, 8 GB), hence the latency and zero cost. Judge: Claude Haiku 5.5, rubric v2 (validated
+below).
 
 **What V0 shows:**
-- **Multi-hop is the weak spot: 5% correct.** Retrieval finds every needed article for only 8 of
-  the 40 multi-hop questions (Recall@5 50%, against 85% on direct questions). One vector search
-  for a question that needs two norms brings back one of them. This is what V1 (hybrid search and
-  reranking) and V2 (query decomposition and a second retrieval pass) are for.
-- **Declining works already: 97%.** The prompt's "say when the excerpts are not enough" holds on
-  unanswerable and out-of-scope questions, with 3% of answerable questions wrongly declined.
-- **Citations: 69% supported.** The local model sometimes fills gaps from memory and attributes
+- **Multi-hop is the weak spot: 22% correct, against 72% on direct questions.** Retrieval finds
+  every needed article for only 8 of the 40 multi-hop questions (Recall@5 50%, against 85% on
+  direct ones): one vector search for a question that needs two norms brings back one of them.
+  This is what V1 (hybrid search and reranking) and V2 (query decomposition and a second
+  retrieval pass) are for.
+- **Declining already works: 98%** of unanswerable and out-of-scope questions, with 4% of
+  answerable questions wrongly declined.
+- **Citations: 66% supported.** The local model sometimes fills gaps from memory and attributes
   rules to revoked norms (e.g. RN 259 instead of RN 566).
 
-> The judge's grades are not yet validated against human labels; that comparison (50 labelled
-> answers, agreement reported as Cohen's kappa) is the next step and may change these numbers.
+## Judge validation
+
+The judge's grades only mean something if they match a person's. 50 V0 answers, stratified by
+question type and by the judge's verdict, were labelled blind (judge verdict hidden) as correct /
+partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate, 0.6–0.8 substantial).
+
+| Judge rubric | Human labels | Kappa (3 classes) | Kappa (correct vs. not) |
+|---|---|---|---|
+| v1 | first pass | 0.25 | 0.35 |
+| v2 | first pass | 0.38 | 0.49 |
+| v1 | after second look | 0.46 | 0.46 |
+| **v2** | **after second look** | **0.63** | **0.62** |
+
+- **v1 → v2.** v1 mixed the content of an answer with the quality of its citations (a right
+  answer citing the wrong norm was "incorrect") and treated every detail of the reference as
+  essential. v2 grades the verdict on content only, keeps citations in their own metric, and calls
+  an answer partial only when what is missing changes the practical answer.
+- **Second look.** In 6 answers the system contradicted the reference on a concrete fact (a
+  percentage, a year, a sanction, a rule stated as its opposite) and the first-pass label had
+  been "correct" or "partial". The labeller re-checked them against the quoted norm and changed
+  them to "incorrect", as the labelling guide defines it. Because that second look saw the judge's
+  argument, the last row is not an independent measurement; the first-pass rows are.
+- Files: `eval/judge_labels_initial.json`, `eval/judge_labels.json`, `eval/judge_validation*.json`;
+  `python -m rag.eval.validate_judge` recomputes the numbers and lists every disagreement.
 
 ## Roadmap
 
@@ -126,7 +150,7 @@ To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
 declined and whether its citations support it. Same prompt and JSON schema on two backends:
 Claude Code headless (`claude -p`, no tools, no MCP servers) or the Anthropic API. The default
 model is Claude Haiku 5.5. The judge is separate from anything inside the pipeline, and is
-validated against human labels before its grades are trusted.
+validated against human labels (see Judge validation).
 
 ## Design decisions
 

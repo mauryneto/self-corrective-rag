@@ -1,0 +1,35 @@
+{
+ "n": 50,
+ "agreement": 0.68,
+ "kappa": 0.4638,
+ "binary_agreement": 0.72,
+ "binary_kappa": 0.4574,
+ "confusion_human_rows_judge_cols": {
+  "correct": {
+   "correct": 22,
+   "partial": 9,
+   "incorrect": 4
+  },
+  "partial": {
+   "correct": 1,
+   "partial": 4,
+   "incorrect": 2
+  },
+  "incorrect": {
+   "correct": 0,
+   "partial": 0,
+   "incorrect": 8
+  }
+ },
+ "human_counts": {
+  "partial": 7,
+  "correct": 35,
+  "incorrect": 8
+ },
+ "judge_counts": {
+  "partial": 13,
+  "correct": 23,
+  "incorrect": 14
+ },
+ "run": "v0_baseline"
+}

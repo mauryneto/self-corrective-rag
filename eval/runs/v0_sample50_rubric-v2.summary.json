@@ -1,4 +1,9 @@
 {
+ "version": "v0",
+ "llm_provider": "ollama",
+ "llm_model": "qwen2.5:14b",
+ "embed_model": "bge-m3",
+ "top_k": 6,
  "n": 50,
  "answer_correct": 0.4286,
  "answer_correct_or_partial": 0.7429,

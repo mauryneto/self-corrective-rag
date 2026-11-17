@@ -59,8 +59,12 @@ def main() -> None:
     name = args.out or f"{args.run}_rubric-{RUBRIC_VERSION}"
     (RUNS_DIR / f"{name}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in out_rows),
                                             encoding="utf-8")
-    summary = summarize(out_rows) | {"run": name, "regraded_from": args.run, "judge_rubric": RUBRIC_VERSION,
-                                     "judge": f"{args.judge_backend}:{args.judge_model}"}
+    source_summary = RUNS_DIR / f"{args.run}.summary.json"
+    inherited = json.loads(source_summary.read_text(encoding="utf-8")) if source_summary.exists() else {}
+    keep = ("version", "llm_provider", "llm_model", "embed_model", "top_k")
+    summary = {k: inherited[k] for k in keep if k in inherited} | summarize(out_rows) | {
+        "run": name, "regraded_from": args.run, "judge_rubric": RUBRIC_VERSION,
+        "judge": f"{args.judge_backend}:{args.judge_model}"}
     (RUNS_DIR / f"{name}.summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"re-graded {len(out_rows)} answers -> eval/runs/{name}.jsonl")
 
