@@ -17,7 +17,28 @@ ceiling 88. What it settled:
 Still open: the **model ceiling**, V1 with a large model answering, to show what the small model
 costs. It is the only row here that costs money (API) or plan usage.
 
-## 2. Fine-tuning the answering model
+## 2. A completeness instruction in the answering prompt
+
+From reading the 32 ceiling failures (`eval/ceiling_failures.md`, 2026-11-18): in 15 of them the
+missing piece is a condition, an exception or a second item that sits in a passage the model was
+given. The prompt asks for a direct answer in up to three short paragraphs and never asks for
+exceptions.
+
+- **The experiment:** one general line in `ANSWER_SYSTEM` (state the conditions, exceptions and
+  deadlines the cited passage attaches to the rule), then V1 and the two ceiling rows again.
+  A few hours of local runs, no cost.
+- **What could go wrong:** longer answers leave more room for the wrong-reading kind of error (8
+  of the 32), and for citing more passages that do not support the claim.
+- **Caveat to report with the result:** the instruction comes from reading failures on the same
+  180 questions it is measured on. There is no held-out set. Keep it general, never tied to a
+  norm or a question.
+
+## 3. Fine-tuning the answering model
+
+**Status after the reading:** not justified yet. Of the 32 ceiling failures, 10 are a strict
+reference or judge, 15 are about completeness (idea 2), 6 are distraction by other passages, and
+only 8 are misreadings that call for a better model. Eight questions are too few to measure a
+gain on. Revisit if idea 2 is tried and the misreadings remain the main group.
 
 The project question is "how much does architecture improve a small model". Fine-tuning is the
 other lever: improve the model itself and keep the architecture fixed. One row, "V1 + fine-tuned
@@ -41,7 +62,7 @@ model", would contrast the two.
   practical answer) and 15 questions are never answered correctly in any setup. Some of that may
   be the reference answer or the judge being strict; worth reading before training anything.
 
-## 3. Fine-tuning retrieval (embeddings or reranker)
+## 4. Fine-tuning retrieval (embeddings or reranker)
 
-Cheaper than idea 2 and fits in 8 GB, but the ceiling says retrieval has little left to give
+Cheaper than idea 3 and fits in 8 GB, but the ceiling says retrieval has little left to give
 (about 10 questions over V1, 6 over V2 without the answer check). Low priority.

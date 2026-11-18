@@ -116,6 +116,13 @@ answer, from a separate process. The earlier runs stay in `eval/runs/` (`v0_base
   the model is right in both setups for 77 questions and in at least one for 99. Its answer
   depends on what surrounds the right passage. Citations are the clear difference: 88%
   supported with gold passages only, 71% with the others around.
+- **Read one by one, about 22 of those 32 are the model's.** In 10 the practical answer is
+  there and the reference or the judge is strict. Of the rest, 8 leave out a condition or
+  exception that is in the passage, 6 answer from a neighbouring passage, and 8 misread the
+  right one. The answering prompt asks for a direct, short answer and never for exceptions,
+  which fits the largest pattern. The full reading is in
+  [eval/ceiling_failures.md](eval/ceiling_failures.md); it is one reader's pass and changes no
+  number here.
 - **A check of the setup:** in the ceiling run, 122 questions got exactly V1's passages (the 60
   without gold sources, and 62 where V1 already had the gold passages first). All 122 answers
   are identical to V1's.
@@ -235,8 +242,8 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V3 | Scope guardrail: decline what the corpus can't answer, starting from V2's context check | ⏳ |
 | V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
 
-Ideas beyond the roadmap (fine-tuning the answering model, now that the ceiling shows where the
-remaining gain is) are in [IDEAS.md](IDEAS.md).
+Ideas beyond the roadmap (a completeness instruction in the answering prompt, fine-tuning the
+answering model) are in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
