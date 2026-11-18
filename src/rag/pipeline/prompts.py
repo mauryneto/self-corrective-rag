@@ -11,6 +11,17 @@ logo após a afirmação que ele sustenta.
 - Se os trechos não forem suficientes para responder, diga isso claramente em vez de supor.
 - Responda em português, de forma direta, em até 3 parágrafos curtos."""
 
+# Experiment (eval/ceiling_failures.md): of the 32 questions the model misses with the gold passages
+# in the prompt, 15 lack a condition, an exception or a second item that the passages do bring. One
+# general rule asks for them. ANSWER_SYSTEM stays as it is: the official runs were made with it.
+COMPLETE_RULE = (
+    "- Dê a regra por inteiro: junto com ela, diga as condições, as exceções e os prazos que os trechos "
+    "citados trazem para o caso, e responda a todas as partes da pergunta.\n"
+)
+_LAST_RULE = "- Responda em português"
+ANSWER_SYSTEM_COMPLETE = ANSWER_SYSTEM.replace(_LAST_RULE, COMPLETE_RULE + _LAST_RULE)
+ANSWER_SYSTEMS = {"default": ANSWER_SYSTEM, "complete": ANSWER_SYSTEM_COMPLETE}
+
 
 def format_context(texts: list[str]) -> str:
     return "\n\n".join(f"[{i}] {t}" for i, t in enumerate(texts, 1))

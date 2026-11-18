@@ -39,6 +39,7 @@ def cited_indexes(text: str, n_sources: int) -> list[int]:
 
 class V0Pipeline:
     version = "v0"
+    answer_system = ANSWER_SYSTEM  # the eval runner can swap it (--answer-prompt)
 
     def __init__(self, store: Store | None = None, embedder: OllamaEmbedder | None = None,
                  llm: LLM | None = None, top_k: int | None = None):
@@ -56,7 +57,7 @@ class V0Pipeline:
         t_retrieval = time.perf_counter() - t0
 
         usage = Usage()
-        text, record = self.llm.complete(ANSWER_SYSTEM, answer_prompt(question, [h.text for h in hits]),
+        text, record = self.llm.complete(self.answer_system, answer_prompt(question, [h.text for h in hits]),
                                          step="generate")
         usage.add(record)
         return Answer(

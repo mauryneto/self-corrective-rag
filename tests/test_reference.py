@@ -99,3 +99,17 @@ def test_ceiling_refuses_questions_outside_the_eval_set():
     p, _ = ceiling(V1_RETRIEVAL)
     with pytest.raises(KeyError):
         p.answer("uma pergunta qualquer")
+
+
+def test_the_answering_prompt_can_be_swapped_for_an_experiment():
+    from rag.pipeline.prompts import ANSWER_SYSTEM, ANSWER_SYSTEM_COMPLETE, COMPLETE_RULE
+
+    # the experiment is the official prompt plus one rule, placed before the last one
+    assert ANSWER_SYSTEM_COMPLETE.replace(COMPLETE_RULE, "") == ANSWER_SYSTEM
+    assert ANSWER_SYSTEM_COMPLETE.splitlines()[-1] == ANSWER_SYSTEM.splitlines()[-1]
+
+    p, llm = ceiling(None)
+    p.answer(MULTI.question)
+    p.answer_system = ANSWER_SYSTEM_COMPLETE
+    p.answer(MULTI.question)
+    assert [system for system, _ in llm.calls] == [ANSWER_SYSTEM, ANSWER_SYSTEM_COMPLETE]

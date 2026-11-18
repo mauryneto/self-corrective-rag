@@ -17,28 +17,29 @@ ceiling 88. What it settled:
 Still open: the **model ceiling**, V1 with a large model answering, to show what the small model
 costs. It is the only row here that costs money (API) or plan usage.
 
-## 2. A completeness instruction in the answering prompt
+## 2. A completeness rule in the answering prompt (done, no gain in V1)
 
-From reading the 32 ceiling failures (`eval/ceiling_failures.md`, 2026-11-18): in 15 of them the
-missing piece is a condition, an exception or a second item that sits in a passage the model was
-given. The prompt asks for a direct answer in up to three short paragraphs and never asks for
-exceptions.
+Measured on 2026-11-18, see the README ("Experiment: a completeness rule in the answering
+prompt"). Correct of 120, official prompt -> with the rule: V1 78 -> 79, ceiling 88 -> 94,
+gold-only ceiling 88 -> 96. The official prompt stays.
 
-- **The experiment:** one general line in `ANSWER_SYSTEM` (state the conditions, exceptions and
-  deadlines the cited passage attaches to the rule), then V1 and the two ceiling rows again.
-  A few hours of local runs, no cost.
-- **What could go wrong:** longer answers leave more room for the wrong-reading kind of error (8
-  of the 32), and for citing more passages that do not support the claim.
-- **Caveat to report with the result:** the instruction comes from reading failures on the same
-  180 questions it is measured on. There is no held-out set. Keep it general, never tied to a
-  norm or a question.
+- The rule helps only on questions where the gold passages are in the prompt and V1 does not
+  retrieve them (28 questions: ceiling 15 -> 21). Where V1 already has every gold article (92),
+  nothing changes.
+- With the rule, the distance from V1 to the ceiling is 15 questions, not 10. Retrieval for
+  multi-hop questions is worth more than the first ceiling suggested.
+
+Still open: **V2 without the answer check, with the rule.** V2's follow-up searches are the one
+place where the system adds missing articles, so it is where the rule could pay. Expected gain is
+small: the follow-up searches complete the context for only 3 more multi-hop questions.
 
 ## 3. Fine-tuning the answering model
 
 **Status after the reading:** not justified yet. Of the 32 ceiling failures, 10 are a strict
 reference or judge, 15 are about completeness (idea 2), 6 are distraction by other passages, and
 only 8 are misreadings that call for a better model. Eight questions are too few to measure a
-gain on. Revisit if idea 2 is tried and the misreadings remain the main group.
+gain on. Idea 2 was tried: it fixed 4 of those 8 at the ceiling and none of it reached V1, which
+points back at multi-hop retrieval before any training.
 
 The project question is "how much does architecture improve a small model". Fine-tuning is the
 other lever: improve the model itself and keep the architecture fixed. One row, "V1 + fine-tuned

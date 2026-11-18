@@ -50,6 +50,22 @@ alike, so the comparisons between versions stand.
 - **Fewer passages is not a free fix for distraction.** The gold-only run recovers 5 of these 6
   and still ends at the same 88, because 11 other questions go the opposite way.
 
+## Follow-up: the completeness instruction was tried
+
+Same day, three rows re-run with one general rule added to the answering prompt (README,
+"Experiment: a completeness rule in the answering prompt"). Correct of 120: ceiling 88 -> 94,
+gold-only ceiling 88 -> 96, V1 78 -> 79.
+
+| Cause | Correct with the rule (ceiling) |
+|---|---|
+| Wrong reading | 4 of 8 (q008, q032, q054, q103) |
+| Distracted | 1 of 6 (q115) |
+| Leaves out a condition or exception | 4 of 8 (q031, q051, q105, q112) |
+| Strict reference or judge | 6 of 10 (q048, q093, q099, q108, q113, q121) |
+
+Fifteen of the 32 become correct and 9 questions that were correct are lost. In V1 the rule
+changes nothing: the gain sits in questions whose gold passages V1 does not retrieve.
+
 ## The 32, one line each
 
 Verdicts: ceiling / gold-only. C correct, P partial, I incorrect.

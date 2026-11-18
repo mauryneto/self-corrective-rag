@@ -23,7 +23,6 @@ from rag.costs import Usage
 from rag.embeddings import OllamaEmbedder
 from rag.llm import LLM
 from rag.pipeline.prompts import (
-    ANSWER_SYSTEM,
     PLAN_SYSTEM,
     VERIFY_SYSTEM,
     answer_prompt,
@@ -105,7 +104,7 @@ class V2Pipeline(V1Pipeline):
         t_retrieval = time.perf_counter() - t0
         texts = [h.text for h in hits]
 
-        text, record = self.llm.complete(ANSWER_SYSTEM, answer_prompt(question, texts), step="generate")
+        text, record = self.llm.complete(self.answer_system, answer_prompt(question, texts), step="generate")
         usage.add(record)
         text = text.strip()
 
@@ -119,7 +118,7 @@ class V2Pipeline(V1Pipeline):
                 check = None
             trace["answer_check"] = check.model_dump() if check else None
             if check and not check.supported and check.problems:
-                revised, record = self.llm.complete(ANSWER_SYSTEM, revise_prompt(question, texts, text, check.problems),
+                revised, record = self.llm.complete(self.answer_system, revise_prompt(question, texts, text, check.problems),
                                                     step="revise")
                 usage.add(record)
                 trace["draft"] = text

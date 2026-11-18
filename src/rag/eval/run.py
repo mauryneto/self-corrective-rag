@@ -3,7 +3,7 @@
     uv run python -m rag.eval.run --version v0 [--limit N] [--judge-backend claude-code|anthropic]
 
 ``--version`` also takes the reference rows ``floor``, ``ceiling`` and ``ceiling_gold``
-(``rag.eval.reference``).
+(``rag.eval.reference``). ``--answer-prompt complete`` swaps the answering prompt for an experiment.
 
 - Results go to ``eval/runs/<run_name>.jsonl`` (one line per question, written as soon as it is
   graded) and the summary to ``eval/runs/<run_name>.summary.json``. Re-running with the same
@@ -27,6 +27,7 @@ from rag.config import ROOT, get_settings
 from rag.eval.dataset import Question, load_questions
 from rag.eval.judge import DEFAULT_JUDGE_MODEL, RUBRIC_VERSION, JudgeCache, get_judge, grade
 from rag.eval.metrics import retrieval_scores, summarize
+from rag.pipeline.prompts import ANSWER_SYSTEMS
 
 RUNS_DIR = ROOT / "eval" / "runs"
 JUDGE_CACHE = ROOT / "eval" / "judge_cache.jsonl"
@@ -78,6 +79,9 @@ def main() -> None:
     parser.add_argument("--answerable-only", action="store_true",
                         help="only the questions the corpus answers (for ceiling_gold, which has nothing to show "
                              "for the others)")
+    parser.add_argument("--answer-prompt", default="default", choices=sorted(ANSWER_SYSTEMS),
+                        help="system prompt of the answering step (rag.pipeline.prompts.ANSWER_SYSTEMS); "
+                             "anything but the default is an experiment and needs its own --name")
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--judge-workers", type=int, default=3)
@@ -101,6 +105,10 @@ def main() -> None:
     print(f"run {name}: {len(questions)} questions, {len(done)} already done, {len(todo)} to go")
 
     pipeline = get_pipeline(args.version)
+    if args.answer_prompt != "default":
+        if not hasattr(pipeline, "answer_system"):
+            raise SystemExit(f"--answer-prompt does not apply to {args.version}: it has its own prompt")
+        pipeline.answer_system = ANSWER_SYSTEMS[args.answer_prompt]
     judge = get_judge(args.judge_backend, args.judge_model)
     cache = None if args.no_judge_cache else JudgeCache(JUDGE_CACHE)
     t0 = time.perf_counter()
@@ -143,7 +151,7 @@ def main() -> None:
     failed = len(results) - len(graded)
     summary = summarize(graded) | {
         "run": name, "version": args.version, "judge": f"{args.judge_backend}:{args.judge_model}",
-        "judge_rubric": RUBRIC_VERSION,
+        "judge_rubric": RUBRIC_VERSION, "answer_prompt": args.answer_prompt,
         "llm_provider": get_settings().llm_provider,
         "llm_model": getattr(pipeline.llm, "model", None), "embed_model": get_settings().embed_model,
         "top_k": get_settings().top_k, "judge_failures": failed, "date": datetime.now().isoformat(timespec="seconds"),

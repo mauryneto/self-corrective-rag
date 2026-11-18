@@ -188,6 +188,40 @@ above):
 | 3 new passages per query | 0.867 | 0.725 | 20/40 | 7.0 |
 | 2 per query, rerank pool 20 | 0.867 | 0.725 | 21/40 | 7.0 |
 
+### Experiment: a completeness rule in the answering prompt
+
+The reading of the ceiling failures pointed at answers that leave out a condition or exception
+the passages bring. One general rule was added to the answering prompt ("give the whole rule:
+the conditions, exceptions and deadlines the cited passages attach to it, and answer every part
+of the question") and three rows were run again (`--answer-prompt complete`; runs `v1_complete`,
+`ceiling_complete`, `ceiling_gold_complete`). Correct answers of 120:
+
+| Row | Official prompt | With the rule | Gained / lost | McNemar p |
+|---|---|---|---|---|
+| V1 | 78 | 79 | 10 / 9 | 1.0 |
+| Ceiling | 88 | 94 | 15 / 9 | 0.31 |
+| Ceiling, gold passages only | 88 | 96 | 12 / 4 | 0.08 |
+
+- **No gain where it counts.** V1 moves by one question, with 19 questions changing sides. The
+  official prompt stays, and the rows above are not in the results table.
+- **The rule helps only when the passages are there.** On the 92 questions where V1 retrieves
+  every gold article, nothing changes (V1 72 → 73, ceiling 73 → 73). The whole gain at the
+  ceiling comes from the 28 where V1 misses one (ceiling 15 → 21, V1 6 → 6): the model can
+  only add a condition from an article it was given.
+- **So retrieval has more left than the first ceiling said.** With the rule, V1 → ceiling is
+  15 questions (19 gained, 4 lost, p = 0.003) instead of 10, and multi-hop at the ceiling goes
+  from 20 to 26 of 40 while V1's goes from 15 to 14.
+- **It costs length and, in V1, citations.** Answers grow from a median of 85 to 109 words;
+  supported citations go from 68% to 65% in V1 (71% → 77% at the ceiling).
+- **Of the 32 ceiling failures, 15 become correct** (6 of the 10 strict-reference ones, 4 of 8
+  omissions, 4 of 8 misreadings, 1 of 6 distractions) **and 9 other questions are lost** (5
+  direct, 4 multi-hop; 6 of them now incorrect, 3 partial).
+- **Caveat:** the rule was written after reading failures on these same questions; there is no
+  held-out set. A gain would have needed that caveat. The absence of one in V1 does not.
+- **Same setup as the official runs:** 8 questions re-run with the official prompt came out
+  identical to the stored answers, and the 62 answerable questions with the same passages in V1
+  and in the ceiling got identical answers under the new prompt.
+
 ### Retrieval ablation (V1 design)
 
 Retrieval-only eval on the 120 answerable questions (`python -m rag.eval.retrieval_eval`; no
@@ -242,7 +276,7 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V3 | Scope guardrail: decline what the corpus can't answer, starting from V2's context check | ⏳ |
 | V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
 
-Ideas beyond the roadmap (a completeness instruction in the answering prompt, fine-tuning the
+Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the
 answering model) are in [IDEAS.md](IDEAS.md).
 
 ## Corpus
