@@ -2,6 +2,9 @@
 
     uv run python -m rag.eval.run --version v0 [--limit N] [--judge-backend claude-code|anthropic]
 
+``--version`` also takes the reference rows ``floor``, ``ceiling`` and ``ceiling_gold``
+(``rag.eval.reference``).
+
 - Results go to ``eval/runs/<run_name>.jsonl`` (one line per question, written as soon as it is
   graded) and the summary to ``eval/runs/<run_name>.summary.json``. Re-running with the same
   ``--name`` resumes: questions already in the file are skipped.
@@ -42,6 +45,12 @@ def get_pipeline(version: str):
         from rag.pipeline.v2 import V2Pipeline
 
         return V2Pipeline()
+    if version in ("floor", "ceiling", "ceiling_gold"):  # reference rows, see rag.eval.reference
+        from rag.eval.reference import CeilingPipeline, FloorPipeline, load_replay
+
+        if version == "floor":
+            return FloorPipeline()
+        return CeilingPipeline(load_questions(), load_replay() if version == "ceiling" else None)
     raise SystemExit(f"unknown pipeline version: {version}")
 
 
@@ -66,6 +75,9 @@ def main() -> None:
     parser.add_argument("--version", default="v0")
     parser.add_argument("--name", default=None, help="run name (default: <version>_<timestamp>); reuse it to resume")
     parser.add_argument("--limit", type=int, default=None, help="only the first N questions (smoke test)")
+    parser.add_argument("--answerable-only", action="store_true",
+                        help="only the questions the corpus answers (for ceiling_gold, which has nothing to show "
+                             "for the others)")
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--judge-workers", type=int, default=3)
@@ -83,7 +95,8 @@ def main() -> None:
                 r = json.loads(line)
                 done[r["id"]] = r
 
-    questions = load_questions()[: args.limit] if args.limit else load_questions()
+    questions = [q for q in load_questions() if q.answerable or not args.answerable_only]
+    questions = questions[: args.limit] if args.limit else questions
     todo = [q for q in questions if q.id not in done]
     print(f"run {name}: {len(questions)} questions, {len(done)} already done, {len(todo)} to go")
 

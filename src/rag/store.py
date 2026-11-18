@@ -117,6 +117,14 @@ class Store:
         by_id = {r[0]: r for r in rows}
         return [Hit(*by_id[cid], score) for cid, score in ranked if cid in by_id]
 
+    def unit_hits(self, doc_id: str, unit: str) -> list[Hit]:
+        """Every chunk of one article (its parts included), in document order (score 0)."""
+        rows = self.conn.execute(
+            "SELECT chunk_id, doc_id, unit, text, source_url FROM chunks WHERE doc_id = %s AND (unit = %s OR unit LIKE %s)",
+            (doc_id, unit, unit + " (parte %"),
+        ).fetchall()
+        return sorted((Hit(*r, 0.0) for r in rows), key=lambda h: int(h.chunk_id.rsplit("#", 1)[1]))
+
     def get_hits(self, chunk_ids: list[str]) -> list[Hit]:
         """Chunks by id, in the given order (score 0). Used to replay stored retrieval results."""
         rows = self.conn.execute(

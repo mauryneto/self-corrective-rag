@@ -9,6 +9,7 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 > 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
 > search + reranker) and V2 (self-corrective loop) measured in a reproducible setup: the same
 > version run twice gives the same answers, so a difference between rows comes from the version.
+> Two reference rows (no retrieval, perfect retrieval) bound what the architecture can add.
 > The guardrail comes next.
 
 ## Results
@@ -17,16 +18,39 @@ Measured on the 180-question eval set (`eval/runs/*_repro.*`). Each new version 
 
 | Version | Correct | Correct + partial | Multi-hop correct | Recall@5 | MRR | Declines when it should | Refusal precision | Citations supported | p50 / p95 latency | Cost / question |
 |---|---|---|---|---|---|---|---|---|---|---|
+| *Floor: no retrieval* | 12% | 32% | 0% | n/a | n/a | 43% | 84% | n/a | n/a | US$ 0 (local) |
 | V0 | 58% | 82% | 23% | 73% | 0.61 | 98% | 92% | 69% | 20s / 38s | US$ 0 (local) |
 | V1 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 68% | 42s / 68s | US$ 0 (local) |
 | V2 | 66% | 78% | 35% | 82% | 0.77 | 97% | 88% | 68% | 55s / 140s | US$ 0 (local) |
 | V2 without the answer check | 68% | 83% | 43% | 82% | 0.77 | 92% | 95% | 68% | n/a | US$ 0 (local) |
+| *Ceiling: perfect retrieval* | 73% | 88% | 50% | 100% | 1.00 | 93% | 100% | 71% | n/a | US$ 0 (local) |
+| *Ceiling, gold passages only* | 73% | 91% | 48% | 100% | 1.00 | n/a | n/a | 88% | n/a | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
 refusal columns over the 60 it should decline. Every version answers with the same prompt and
 `qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB), hence the latency and zero cost; only what the
 row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below). The last row
 is the V2 run graded on the drafts written before the answer check (`regrade --drafts`).
+
+The rows in italics are references, not versions (`rag.eval.reference`): the same model with no
+passages at all, and with the gold passages handed to it (first in the prompt, followed by V1's
+other passages up to the same six; or alone). They bound what any retrieval can add.
+
+**How much of the possible gain each version delivers.** From floor to ceiling there are 74
+questions to gain (14 → 88 of 120):
+
+| Version | Correct (of 120) | Share of the floor-to-ceiling gain |
+|---|---|---|
+| Floor | 14 | 0% |
+| V0 | 69 | 74% |
+| V1 | 78 | 86% |
+| V2 | 79 | 88% |
+| V2 without the answer check | 82 | 92% |
+| Ceiling | 88 | 100% |
+
+Plain vector search already delivers three quarters of what retrieval can give this model; the
+reranker and the follow-up searches most of the rest. What is left above the ceiling, 32
+questions of 120, no retrieval can reach: it belongs to the model.
 
 **Compare versions question by question.** With 120 answerable questions, versions a few points
 apart can differ by chance in which questions they happen to get right.
@@ -40,6 +64,9 @@ McNemar's exact test):
 | V1 → V2 without the answer check | 78 → 82 | 8 / 4 | 0.39 |
 | V0 → V2 without the answer check | 69 → 82 | 20 / 7 | 0.02 |
 | Answer check: without → with | 82 → 79 | 1 / 4 | 0.38 |
+| Floor → V0 | 14 → 69 | 58 / 3 | < 0.001 |
+| V1 → ceiling | 78 → 88 | 15 / 5 | 0.04 |
+| Ceiling → ceiling, gold passages only | 88 → 88 | 11 / 11 | 1.00 |
 
 Retrieval metrics (Recall@5, MRR) are exact, so V1's retrieval gain is solid. In correct answers,
 each single step is in the right direction but not significant on its own; only the two steps
@@ -74,6 +101,24 @@ answer, from a separate process. The earlier runs stay in `eval/runs/` (`v0_base
 `v1_rerun`, `v2`) but are not in the table: 67, 76, 72 and 75 correct of 120.
 
 ### What each version shows
+
+**Floor and ceiling** (the same model with no passages, and with the gold passages):
+- **Without retrieval the model knows little: 14 of 120, and none of the 40 multi-hop
+  questions.** It also answers 34 of the 60 questions it should decline. Almost everything in
+  the table is the architecture's doing, not the model's memory.
+- **Perfect retrieval gives 88 of 120, not 120.** Direct questions reach 68 of 80; multi-hop
+  only 20 of 40. Half of the multi-hop questions fail with every needed article in the prompt.
+- **Retrieval has 10 questions left to give** (V1 → ceiling, p = 0.04), 6 over V2 without the
+  answer check. The model has 32. The larger remaining gain is in what the model does with the
+  passages, not in finding them.
+- **The other passages in the prompt do not lower the score, but they change the answers.**
+  With only the gold passages the total is the same 88, yet 22 questions flip (11 each way):
+  the model is right in both setups for 77 questions and in at least one for 99. Its answer
+  depends on what surrounds the right passage. Citations are the clear difference: 88%
+  supported with gold passages only, 71% with the others around.
+- **A check of the setup:** in the ceiling run, 122 questions got exactly V1's passages (the 60
+  without gold sources, and 62 where V1 already had the gold passages first). All 122 answers
+  are identical to V1's.
 
 **V0** (vector search only):
 - **Multi-hop is the weak spot: 9 of 40 correct, against 60 of 80 on direct questions.**
@@ -120,8 +165,8 @@ the passages it cites and rewrite it once if a claim is unsupported):
   searches complete only 3 more of them (18 → 21 of 40; context recall 83% → 88%).
 - **Multi-hop is also a reasoning problem, not only a retrieval one.** With every needed
   article in the prompt, the 14B model still answers only about half of the multi-hop questions
-  correctly: 10 of 18 in V1, 11 of 21 in V2 before the answer check. Better retrieval cannot
-  close that half; see [IDEAS.md](IDEAS.md) for the reference rows that would measure it.
+  correctly: 10 of 18 in V1, 11 of 21 in V2 before the answer check, 20 of 40 at the ceiling.
+  Better retrieval cannot close that half.
 
 Retrieval-only check of the decomposition step (`python -m rag.eval.context_check_eval`, replays
 V1's retrieval, 120 answerable questions; context recall = gold articles anywhere in the prompt;
@@ -190,7 +235,8 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V3 | Scope guardrail: decline what the corpus can't answer, starting from V2's context check | ⏳ |
 | V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
 
-Ideas beyond the roadmap (floor and ceiling reference rows, fine-tuning) are in [IDEAS.md](IDEAS.md).
+Ideas beyond the roadmap (fine-tuning the answering model, now that the ceiling shows where the
+remaining gain is) are in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
@@ -299,6 +345,9 @@ validated against human labels (see Judge validation).
   are written down, with the eval showing which of V2's steps still earn their place.
 - **A small local model on purpose.** Every version answers with the same 14B local model, so the
   table shows how much the architecture improves a small model, not how good a frontier model is.
+- **Bound the question before answering it.** A floor (no retrieval) and a ceiling (gold
+  passages) turn "V1 is better than V0" into "V1 delivers 86% of what retrieval can give this
+  model", and show when the next gain has to come from somewhere else.
 - **Local embeddings.** `bge-m3` is multilingual and runs locally through Ollama: re-indexing
   costs nothing and the eval's cost numbers only reflect the LLM calls.
 - **Provider-agnostic LLM layer.** Every call records tokens, latency and estimated cost, so the
