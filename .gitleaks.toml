@@ -1,0 +1,10 @@
+# Default rules, plus one exception for a known false positive.
+[extend]
+useDefault = true
+
+[allowlist]
+description = """\
+Commit 0c23e5f added eval/judge_cache.jsonl with its hash field named "key"; the scanner read \
+472 SHA-256 hashes of judge prompts as API keys. They were the only findings in that commit. \
+The field is now called "prompt_sha256"."""
+commits = ["0c23e5f1f7974ac8eab6848f4d39f56e971a3098"]

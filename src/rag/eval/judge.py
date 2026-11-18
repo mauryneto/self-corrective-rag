@@ -214,6 +214,9 @@ class JudgeCache:
     keep its verdict, so the judge's own noise does not show up as a difference between runs.
     Append-only JSONL; safe to share between the judge threads of one run."""
 
+    # Named for what it is: a field called "key" holding a hash trips secret scanners.
+    FIELD = "prompt_sha256"
+
     def __init__(self, path: Path):
         self.path = path
         self._lock = threading.Lock()
@@ -222,7 +225,7 @@ class JudgeCache:
             for line in path.read_text(encoding="utf-8").splitlines():
                 if line.strip():
                     row = json.loads(line)
-                    self._verdicts[row["key"]] = row["verdict"]
+                    self._verdicts[row[self.FIELD]] = row["verdict"]
 
     @staticmethod
     def key(model: str, prompt: str) -> str:
@@ -238,7 +241,7 @@ class JudgeCache:
             self._verdicts[key] = verdict.model_dump()
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.path.open("a", encoding="utf-8") as fh:
-                fh.write(json.dumps({"key": key, "verdict": verdict.model_dump()}, ensure_ascii=False) + "\n")
+                fh.write(json.dumps({self.FIELD: key, "verdict": verdict.model_dump()}, ensure_ascii=False) + "\n")
 
 
 def get_judge(backend: str = "claude-code", model: str = DEFAULT_JUDGE_MODEL) -> JudgeBackend:
