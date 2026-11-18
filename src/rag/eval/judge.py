@@ -13,11 +13,13 @@ grades are trusted.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -144,7 +146,9 @@ class ClaudeCodeJudge:
     def grade(self, prompt: str) -> tuple[Verdict, CallRecord]:
         t0 = time.perf_counter()
         # Run from an empty folder so no project instructions (CLAUDE.md) leak into the judge.
-        with tempfile.TemporaryDirectory() as cwd:
+        # On Windows the folder can still be held for a moment after the process exits; failing to
+        # delete it must not throw away a verdict that was already returned.
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as cwd:
             proc = subprocess.run(
                 self.command(), input=prompt, capture_output=True, text=True, encoding="utf-8",
                 timeout=self.timeout_s, cwd=cwd, env={**os.environ},
@@ -199,6 +203,42 @@ class AnthropicJudge:
 class JudgedAnswer:
     verdict: Verdict
     record: CallRecord
+    cached: bool = False
+
+
+class JudgeCache:
+    """Verdicts already given, keyed by everything the judge sees (rubric, model, full prompt).
+
+    The judge is an LLM and not perfectly repeatable: graded twice, the same answer occasionally
+    gets a different verdict. With reproducible generation, an unchanged answer in a new run should
+    keep its verdict, so the judge's own noise does not show up as a difference between runs.
+    Append-only JSONL; safe to share between the judge threads of one run."""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self._lock = threading.Lock()
+        self._verdicts: dict[str, dict] = {}
+        if path.exists():
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    row = json.loads(line)
+                    self._verdicts[row["key"]] = row["verdict"]
+
+    @staticmethod
+    def key(model: str, prompt: str) -> str:
+        payload = json.dumps([RUBRIC_VERSION, JUDGE_SYSTEM, model, prompt], ensure_ascii=False)
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def get(self, key: str) -> Verdict | None:
+        row = self._verdicts.get(key)
+        return Verdict.model_validate(row) if row else None
+
+    def put(self, key: str, verdict: Verdict) -> None:
+        with self._lock:
+            self._verdicts[key] = verdict.model_dump()
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            with self.path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"key": key, "verdict": verdict.model_dump()}, ensure_ascii=False) + "\n")
 
 
 def get_judge(backend: str = "claude-code", model: str = DEFAULT_JUDGE_MODEL) -> JudgeBackend:
@@ -210,12 +250,17 @@ def get_judge(backend: str = "claude-code", model: str = DEFAULT_JUDGE_MODEL) ->
 
 
 def grade(judge: JudgeBackend, question: str, reference: str, answerable: bool, answer: str,
-          cited: dict[int, str], retries: int = 2) -> JudgedAnswer:
+          cited: dict[int, str], retries: int = 2, cache: JudgeCache | None = None) -> JudgedAnswer:
     prompt = judge_prompt(question, reference, answerable, answer, cited)
+    key = JudgeCache.key(judge.model, prompt) if cache else ""
+    if cache and (hit := cache.get(key)):
+        return JudgedAnswer(hit, CallRecord("judge", judge.model, 0, 0, 0.0), cached=True)
     last: Exception | None = None
     for _ in range(retries + 1):
         try:
             verdict, record = judge.grade(prompt)
+            if cache:
+                cache.put(key, verdict)
             return JudgedAnswer(verdict, record)
         except (JudgeError, subprocess.TimeoutExpired, ValueError) as exc:
             last = exc

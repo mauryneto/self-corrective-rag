@@ -7,7 +7,9 @@
   ``--name`` resumes: questions already in the file are skipped.
 - Answers are generated one at a time (the local model uses the GPU); grading runs in parallel
   threads, so the judge works while the next answer is being generated.
-- If MLflow is installed, the run is logged to ``./mlruns`` (parameters + summary metrics).
+- Verdicts are cached in ``eval/judge_cache.jsonl`` by everything the judge sees: an answer that
+  comes out identical in a later run keeps its verdict (``--no-judge-cache`` to grade afresh).
+- If MLflow is installed, the run is logged to ``mlflow.db`` (parameters + summary metrics).
 """
 
 from __future__ import annotations
@@ -20,10 +22,11 @@ from datetime import datetime
 
 from rag.config import ROOT, get_settings
 from rag.eval.dataset import Question, load_questions
-from rag.eval.judge import DEFAULT_JUDGE_MODEL, RUBRIC_VERSION, get_judge, grade
+from rag.eval.judge import DEFAULT_JUDGE_MODEL, RUBRIC_VERSION, JudgeCache, get_judge, grade
 from rag.eval.metrics import retrieval_scores, summarize
 
 RUNS_DIR = ROOT / "eval" / "runs"
+JUDGE_CACHE = ROOT / "eval" / "judge_cache.jsonl"
 
 
 def get_pipeline(version: str):
@@ -66,6 +69,8 @@ def main() -> None:
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--judge-workers", type=int, default=3)
+    parser.add_argument("--no-judge-cache", action="store_true",
+                        help="grade every answer afresh instead of reusing verdicts for identical answers")
     args = parser.parse_args()
 
     name = args.name or f"{args.version}_{datetime.now():%Y%m%d_%H%M}"
@@ -84,14 +89,15 @@ def main() -> None:
 
     pipeline = get_pipeline(args.version)
     judge = get_judge(args.judge_backend, args.judge_model)
+    cache = None if args.no_judge_cache else JudgeCache(JUDGE_CACHE)
     t0 = time.perf_counter()
 
     def judge_and_save(q: Question, rec: dict, cited: dict[int, str]) -> dict:
         try:
-            j = grade(judge, q.question, q.reference_answer, q.answerable, rec["answer"], cited)
+            j = grade(judge, q.question, q.reference_answer, q.answerable, rec["answer"], cited, cache=cache)
             rec |= {"verdict": j.verdict.verdict, "refused": j.verdict.refused,
                     "citations_supported": j.verdict.citations_supported, "judge_reasoning": j.verdict.reasoning,
-                    "judge_latency_s": round(j.record.latency_s, 2)}
+                    "judge_latency_s": round(j.record.latency_s, 2), "judge_cached": j.cached}
         except Exception as exc:  # noqa: BLE001 - keep the answer; it can be re-graded later
             rec |= {"verdict": None, "refused": None, "citations_supported": None, "judge_error": str(exc)[:300]}
         return rec

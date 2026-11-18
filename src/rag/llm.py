@@ -35,7 +35,29 @@ class OllamaLLM:
         s = get_settings()
         self.model = model or s.ollama_llm_model
         self.url = (url or s.ollama_url).rstrip("/")
+        self.num_gpu = s.ollama_num_gpu
+        self.num_ctx = s.ollama_num_ctx
+        self.reproducible = s.ollama_reproducible
         self.client = httpx.Client(timeout=600)
+
+    def _options(self, max_tokens: int) -> dict:
+        # Same num_ctx / num_gpu on every request: a different value makes Ollama reload the model.
+        return ({"temperature": 0, "seed": 0, "num_predict": max_tokens, "num_ctx": self.num_ctx}
+                | ({"num_gpu": self.num_gpu} if self.num_gpu is not None else {}))
+
+    def _reset_cache(self) -> None:
+        """Make the next request's arithmetic independent of the previous one.
+
+        Ollama reuses the KV cache for the prefix a request shares with the previous one, and how
+        much is reused changes how the rest of the prompt is batched, hence the floating-point
+        rounding, hence (at temperature 0) sometimes the answer. A one-token request whose system
+        prompt differs from every real one leaves only the chat template's opening tokens to reuse,
+        the same for every request; and since it is also the first request after any model load,
+        those tokens are always computed the same way. Costs one tiny request (~0.2 s)."""
+        resp = self.client.post(f"{self.url}/api/chat", json={
+            "model": self.model, "stream": False, "messages": [{"role": "system", "content": "."}],
+            "options": self._options(1)})
+        resp.raise_for_status()
 
     def _chat(self, system: str, prompt: str, step: str, max_tokens: int, fmt: dict | None) -> tuple[str, CallRecord]:
         t0 = time.perf_counter()
@@ -43,12 +65,14 @@ class OllamaLLM:
             "model": self.model,
             "stream": False,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-            "options": {"temperature": 0, "num_predict": max_tokens, "num_ctx": 16384},
+            "options": self._options(max_tokens),
         }
         if fmt is not None:
             body["format"] = fmt  # structured output: Ollama constrains decoding to this JSON schema
 
         def call() -> dict:
+            if self.reproducible:
+                self._reset_cache()
             resp = self.client.post(f"{self.url}/api/chat", json=body)
             resp.raise_for_status()
             return resp.json()

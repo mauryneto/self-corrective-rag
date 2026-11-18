@@ -7,89 +7,126 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 
 > **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
 > 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
-> search + reranker) and V2 (self-corrective loop) measured, together with the run-to-run noise
-> that every comparison has to clear. The guardrail comes next.
+> search + reranker) and V2 (self-corrective loop) measured in a reproducible setup: the same
+> version run twice gives the same answers, so a difference between rows comes from the version.
+> The guardrail comes next.
 
 ## Results
 
-Measured on the 180-question eval set (`eval/runs/`). Each new version gets a row.
+Measured on the 180-question eval set (`eval/runs/*_repro.*`). Each new version gets a row.
 
 | Version | Correct | Correct + partial | Multi-hop correct | Recall@5 | MRR | Declines when it should | Refusal precision | Citations supported | p50 / p95 latency | Cost / question |
 |---|---|---|---|---|---|---|---|---|---|---|
-| V0 | 56% | 82% | 22% | 73% | 0.61 | 98% | 92% | 66% | 28s / 44s | US$ 0 (local) |
-| V1 | 63% | 82% | 32% | 82% | 0.77 | 93% | 95% | 68% | 36s / 58s | US$ 0 (local) |
-| V1, run again | 60% | 82% | 40% | 82% | 0.77 | 95% | 97% | 66% | 51s / 73s | US$ 0 (local) |
-| V2 | 62% | 84% | 25% | 82% | 0.77 | 97% | 97% | 67% | 88s / 192s | US$ 0 (local) |
+| V0 | 58% | 82% | 23% | 73% | 0.61 | 98% | 92% | 69% | 20s / 38s | US$ 0 (local) |
+| V1 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 68% | 42s / 68s | US$ 0 (local) |
+| V2 | 66% | 78% | 35% | 82% | 0.77 | 97% | 88% | 68% | 55s / 140s | US$ 0 (local) |
+| V2 without the answer check | 68% | 83% | 43% | 82% | 0.77 | 92% | 95% | 68% | n/a | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
 refusal columns over the 60 it should decline. Every version answers with the same prompt and
 `qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB), hence the latency and zero cost; only what the
-row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below).
+row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below). The last row
+is the V2 run graded on the drafts written before the answer check (`regrade --drafts`).
 
-**Read the rows against the noise.** "V1, run again" is the same code, data and settings run a
-second time. Local generation is not bit-for-bit reproducible even at temperature 0 (see below),
-so 141 of 180 answers come out worded differently and some flip between right and wrong: direct
-79% → 70%, multi-hop 32% → 40%. (The judge adds little of this: on the 39 identical answers it
-changed its verdict twice.) With 120 answerable questions, a single run cannot tell apart
-versions a few points apart. `python -m rag.eval.compare RUN_A RUN_B` does the paired comparison
-(questions gained and lost, McNemar's exact test):
+**Compare versions question by question.** With 120 answerable questions, versions a few points
+apart can differ by chance in which questions they happen to get right.
+`python -m rag.eval.compare RUN_A RUN_B` does the paired comparison (questions gained and lost,
+McNemar's exact test):
 
 | Comparison | Correct (of 120) | Gained / lost | p |
 |---|---|---|---|
-| V1 vs. V1 run again (pure noise) | 76 → 72 | 7 / 11 | 0.48 |
-| V0 vs. V1 | 67 → 76 | 16 / 7 | 0.09 |
-| V1 vs. V2 | 76 → 75 | 12 / 13 | 1.00 |
+| V0 → V1 | 69 → 78 | 18 / 9 | 0.12 |
+| V1 → V2 | 78 → 79 | 8 / 7 | 1.00 |
+| V1 → V2 without the answer check | 78 → 82 | 8 / 4 | 0.39 |
+| V0 → V2 without the answer check | 69 → 82 | 20 / 7 | 0.02 |
+| Answer check: without → with | 82 → 79 | 1 / 4 | 0.38 |
 
-Retrieval metrics (Recall@5, MRR) are deterministic, so V1's retrieval gain is solid; its gain in
-correct answers is in the right direction but not significant on one run.
+Retrieval metrics (Recall@5, MRR) are exact, so V1's retrieval gain is solid. In correct answers,
+each single step is in the right direction but not significant on its own; only the two steps
+together (V0 → V2 without the answer check, +13 questions) clear the test, and that is one of
+five comparisons, not a planned one.
 
-**What V0 shows:**
-- **Multi-hop is the weak spot: 22% correct, against 72% on direct questions.** Retrieval finds
-  every needed article for only 8 of the 40 multi-hop questions (Recall@5 50%, against 85% on
-  direct ones): one vector search for a question that needs two norms brings back one of them.
-  This is what V1 (hybrid search and reranking) and V2 (query decomposition and a second
-  retrieval pass) are for.
+### Reproducibility
+
+The first version of this table was not comparable row to row, and said so wrongly. A second run
+of V1, same code and settings, gave 39 identical answers out of 180 and 72 correct instead of 76;
+it was reported here as "pure noise". Two causes, neither of them random:
+
+- **Where the model ran.** Ollama decides how many layers go on the GPU from the VRAM free when
+  the model loads. A crashed runner process was still holding VRAM, so the second V1 run and the
+  first V2 run had 0 of 49 layers on the GPU, while V0 and V1 had about 21. Different hardware
+  split, different floating-point rounding, different answers.
+- **The prompt cache.** Ollama reuses the cached start of the previous prompt, and how much it
+  reuses changes how the rest is batched, which again changes the rounding.
+
+What the eval does now (`rag.llm.OllamaLLM`, `rag.eval.judge.JudgeCache`):
+
+| Source of variation | Fix |
+|---|---|
+| GPU / CPU split chosen at load time | `OLLAMA_NUM_GPU` pins the layers on the GPU (16 keeps the generator and the embedding model loaded together in 8 GB) |
+| Prompt cache carried over from the previous call | a one-token request before every call resets it, so every prompt starts from the same state |
+| The judge grading the same answer differently | verdicts are cached by rubric, judge model and full prompt; an unchanged answer keeps its verdict |
+
+Checks that it holds: two runs of the same version gave identical answers and traces (12 of 12
+for V1, 6 of 6 for V2), and those answers came out identical again in the full runs hours later.
+For the 90 questions where V2's context check added no passage, V2's draft is byte-for-byte V1's
+answer, from a separate process. The earlier runs stay in `eval/runs/` (`v0_baseline`, `v1`,
+`v1_rerun`, `v2`) but are not in the table: 67, 76, 72 and 75 correct of 120.
+
+### What each version shows
+
+**V0** (vector search only):
+- **Multi-hop is the weak spot: 9 of 40 correct, against 60 of 80 on direct questions.**
+  Retrieval finds every needed article for only 8 of the 40 multi-hop questions (Recall@5 50%,
+  against 85% on direct ones): one vector search for a question that needs two norms brings back
+  one of them. This is what V1 (hybrid search and reranking) and V2 (query decomposition and a
+  second retrieval pass) are for.
 - **Declining already works: 98%** of unanswerable and out-of-scope questions, with 4% of
   answerable questions wrongly declined.
-- **Citations: 66% supported.** The local model sometimes fills gaps from memory and attributes
+- **Citations: 69% supported.** The local model sometimes fills gaps from memory and attributes
   rules to revoked norms (e.g. RN 259 instead of RN 566).
 
-**What V1 shows** (hybrid search + cross-encoder reranker; same prompt and model as V0):
+**V1** (hybrid search + cross-encoder reranker; same prompt and model as V0):
 - **Retrieval clearly improves: Recall@5 73% → 82%, MRR 0.61 → 0.77.** Correct answers go
-  56% → 63% (multi-hop 22% → 32%), in the expected direction but, as the noise check above shows,
-  not significant on a single run (p = 0.09).
+  69 → 78 of 120 (multi-hop 9 → 15 of 40), in the expected direction but not significant on
+  their own (p = 0.12).
 - **The reranker did the work, not the hybrid fusion.** In the retrieval-only ablation below,
   fusing BM25 with the vectors did not beat vector search on this corpus (bge-m3 is already
   strong and BM25 adds noise); the 568M multilingual cross-encoder is what moved recall.
-- **A trade-off appeared in declining: 98% → 93%.** With more relevant-looking passages in the
-  prompt, the model answers some questions it should decline. That is the job of V3's guardrail.
-- **It costs latency:** the reranker runs on CPU (~10 s per question), p50 28 s → 36 s. Cutting
-  that is part of V4.
-- **Multi-hop is still the weak spot** (32%): even with a better ranking, a single search for a
-  question that needs two norms finds every needed article for only 16 of 40. That is V2's job:
-  decompose the question and search again.
+- **A trade-off appeared in declining: 59 → 56 of 60.** With more relevant-looking passages in
+  the prompt, the model answers some questions it should decline. That is the job of V3's
+  guardrail.
+- **It costs latency:** the reranker runs on CPU (median 14 s per question), p50 20 s → 42 s.
+  Cutting that is part of V4.
+- **Multi-hop is still the weak spot** (15 of 40): even with a better ranking, a single search
+  for a question that needs two norms finds every needed article for only 16 of 40. That is V2's
+  job: decompose the question and search again.
 
-**What V2 shows** (V1 plus a self-corrective loop, every step run by the same 14B model: check
-whether the passages cover the question and, if not, search for what is missing; check the
-answer against the passages it cites and rewrite it once if a claim is unsupported):
-- **No measurable gain in correct answers** (62% against 60–63% for V1's two runs), at 2.4× the
-  latency (p50 88 s): three to five LLM calls per question instead of one.
-- **Declining improves a little: 97%** of unanswerable and out-of-scope questions, against
-  93–95%. The context check is the useful part here: it flagged 43 of those 60 as "the passages
-  don't cover this", which is the signal V3's guardrail builds on.
-- **Decomposition finds little of what is missing.** In the retrieval-only check below, the
-  model flags 13 of the 22 multi-hop questions whose context is incomplete and writes sensible
-  follow-up queries, but those searches complete only 2 more of them (context recall 83% → 87%).
-- **Multi-hop is also a reasoning problem, not only a retrieval one.** Even with every needed
-  article in the prompt, the 14B model answers only about half of the multi-hop questions
-  correctly (V1: 9 of 18); with the extra passages V2 adds, 5 of 21. More context seems to
-  distract the small model more than it helps.
-- **The answer check helps a bit.** Grading the first drafts it rewrote (`regrade --drafts`):
-  without it, 61% correct and multi-hop 20%; with it, 62% and 25%; citations supported 64% → 67%.
-  Small numbers (30 rewritten answers), same caveat as above.
+**V2** (V1 plus a self-corrective loop, every step run by the same 14B model: check whether the
+passages cover the question and, if not, search for what is missing; check the answer against
+the passages it cites and rewrite it once if a claim is unsupported):
+- **No measurable gain in correct answers over V1** (79 against 78 of 120), at 1.3× the median
+  latency and 2× the p95: two to four LLM calls per question instead of one.
+- **The answer check trades correct answers for refusals.** It rewrote 31 answers. Three wrong
+  answers to questions the corpus cannot answer became correct refusals (55 → 58 of 60 declined),
+  but four correct answers were lost and one gained (82 → 79 of 120), and wrongful refusals went
+  from 3 to 8 of 120. It makes the system more cautious, not more accurate, and an earlier run
+  that suggested a small gain did not replicate.
+- **The context check is a strong but noisy signal for declining.** It flags 58 of the 60
+  questions the system should decline as "the passages don't cover this", and also 44 of the
+  120 answerable ones. V3's guardrail starts from this signal and has to fix its precision.
+- **Decomposition finds little of what is missing.** The model flags 13 of the 22 multi-hop
+  questions whose context is incomplete and writes sensible follow-up queries, but those
+  searches complete only 3 more of them (18 → 21 of 40; context recall 83% → 88%).
+- **Multi-hop is also a reasoning problem, not only a retrieval one.** With every needed
+  article in the prompt, the 14B model still answers only about half of the multi-hop questions
+  correctly: 10 of 18 in V1, 11 of 21 in V2 before the answer check. Better retrieval cannot
+  close that half; see [IDEAS.md](IDEAS.md) for the reference rows that would measure it.
 
 Retrieval-only check of the decomposition step (`python -m rag.eval.context_check_eval`, replays
-V1's retrieval, 120 answerable questions; context recall = gold articles anywhere in the prompt):
+V1's retrieval, 120 answerable questions; context recall = gold articles anywhere in the prompt;
+measured before the reproducible setup, so the follow-up queries differ slightly from the V2 row
+above):
 
 | Follow-up retrieval | Context recall | Multi-hop recall | Multi-hop complete | Passages in prompt |
 |---|---|---|---|---|
@@ -149,9 +186,11 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 |---|---|---|
 | V0 | Naive RAG: vector search only | ✅ |
 | V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
-| V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: better declining, no gain in correct answers, 2.4× latency |
-| V3 | Scope guardrail: decline what the corpus can't answer | ⏳ |
-| V4 | Faster and reproducible: embeddings off the GPU so the generator stays loaded, deterministic generation, early exit | ⏳ |
+| V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: no gain in correct answers over V1; the answer check trades accuracy for refusals |
+| V3 | Scope guardrail: decline what the corpus can't answer, starting from V2's context check | ⏳ |
+| V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
+
+Ideas beyond the roadmap (floor and ceiling reference rows, fine-tuning) are in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
@@ -209,6 +248,10 @@ curl -s localhost:8000/ask -H "content-type: application/json" \
 To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
 `ANTHROPIC_API_KEY` in `.env`.
 
+`OLLAMA_NUM_GPU` in `.env` pins how many layers of the local model run on the GPU. The default
+in `.env.example` (16) fits 8 GB of VRAM; adjust it to your card, and keep it fixed between the
+runs you want to compare.
+
 ## Eval set
 
 `eval/questions.jsonl`: 180 questions in Portuguese, fixed and versioned.
@@ -247,13 +290,13 @@ validated against human labels (see Judge validation).
   few thousand chunks), because Postgres' own ranking has no IDF.
 - **Measure retrieval on its own first.** A retrieval-only eval (Recall@5, MRR, seconds per
   setup) chose V1's design before paying for a full eval run with generation and judging.
-- **Measure the noise before reading a difference.** The same version run twice moves direct
-  questions by 9 points, so every comparison is paired per question and tested, and a re-run of
-  an unchanged version sits in the results table. On this setup, local generation is reproducible
-  only when the model starts from a fresh load: Ollama reuses the cached start of the previous
-  prompt, which changes the floating-point rounding.
-- **Negative results stay in the table.** V2 did not pay for its latency with this model; the
-  table says so, and the eval shows which of its steps still earn their place.
+- **Make the measurement repeatable before reading a difference.** The same version run twice
+  used to disagree on most answers. The eval now pins the GPU split, resets the prompt cache
+  before every call and caches judge verdicts (see Reproducibility), and every comparison is
+  paired per question and tested.
+- **Negative results and corrections stay in the README.** V2 did not pay for its latency with
+  this model, and the first results table blamed on noise what was a hardware difference; both
+  are written down, with the eval showing which of V2's steps still earn their place.
 - **A small local model on purpose.** Every version answers with the same 14B local model, so the
   table shows how much the architecture improves a small model, not how good a frontier model is.
 - **Local embeddings.** `bge-m3` is multilingual and runs locally through Ollama: re-indexing

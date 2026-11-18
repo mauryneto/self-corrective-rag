@@ -18,6 +18,14 @@ class Settings(BaseSettings):
 
     llm_provider: Literal["ollama", "anthropic"] = "ollama"
     ollama_llm_model: str = "qwen2.5:14b"
+    # Layers of the local model placed on the GPU. Left unset, Ollama picks a number from the VRAM
+    # free at load time, which changes the arithmetic and therefore the answers between runs.
+    # Pinning it (and keeping the embedding model loaded alongside) makes runs comparable.
+    ollama_num_gpu: int | None = None
+    ollama_num_ctx: int = 16384
+    # Reset Ollama's prompt cache before every call so the same prompt always gives the same
+    # answer (see rag.llm.OllamaLLM._reset_cache). Off only to save ~0.2 s per call.
+    ollama_reproducible: bool = True
     anthropic_model: str = "claude-opus-5-5"
 
     top_k: int = 6
