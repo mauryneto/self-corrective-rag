@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     ollama_url: str = "http://127.0.0.1:11434"
     embed_model: str = "bge-m3"
     embed_dim: int = 1024
+    # Layers of the embedding model on the GPU: unset lets Ollama decide (all of them), 0 keeps it on
+    # the CPU. A query embeds in 0.3 s there, which frees 1.2 GB of VRAM for the other models.
+    embed_num_gpu: int | None = None
 
     llm_provider: Literal["ollama", "anthropic"] = "ollama"
     ollama_llm_model: str = "qwen2.5:14b"

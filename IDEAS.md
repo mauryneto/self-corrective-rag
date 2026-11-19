@@ -68,16 +68,19 @@ model", would contrast the two.
 Cheaper than idea 3 and fits in 8 GB, but the ceiling says retrieval has little left to give
 (about 10 questions over V1, 6 over V2 without the answer check). Low priority.
 
-## 5. A generator that fits on the GPU
+## 5. A generator that fits on the GPU (done)
 
-V4 showed where the remaining latency is: the 14B model takes 9 GB, the card has 8, so 33 of its
-49 layers run on the CPU and it writes 8 tokens per second (about 26 s of the 25 to 41 s per
-question). No setting fixes that; a model that fits does.
+Measured on 2026-11-19 with `qwen2.5:7b`, see the README ("A smaller answering model"). Correct
+of 120, 14B -> 7B on the same passages: V0 69 -> 55, V1 78 -> 58, ceiling 88 -> 75, gold-only
+ceiling 88 -> 82. V2, each model running its own loop: 79 -> 58. V4 end to end: 25 s -> 3.7 s
+per question.
 
-- **The row:** V4 with `qwen2.5:7b` (or another model under 6 GB) answering. Expected to be
-  several times faster and less accurate. It would say how many correct answers the larger
-  model buys and at what cost in seconds, on the same architecture.
-- **Cost:** one full run of the 180 questions, since every answer changes. Short if the model
-  is fast.
-- **Care:** a new model needs its own `OLLAMA_NUM_GPU` (all layers) and its own determinism
-  check before the row is trusted.
+- The smaller model is close to the larger one when the prompt holds only the right passages
+  and falls behind when other passages are around. Its weak spot is what to ignore.
+- That points at the prompt's content, not its ranking: fewer passages, or passages filtered
+  before the model sees them, are the next thing to try with the 7B. The score of the reranker
+  is already there (V3 uses it for the gate): a cut such as "keep the passages scoring above
+  x, at most six" costs nothing to run and can be measured on the stored runs first.
+- Fine-tuning (idea 3) has a better case with the 7B than with the 14B: it fits in 8 GB for
+  training and there is more to gain (58 of 120 correct in V1). Its failures have not been read
+  one by one yet; that comes first, as it did for the 14B.

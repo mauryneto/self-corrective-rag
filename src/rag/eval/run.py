@@ -17,6 +17,10 @@
   the stored answer and verdict are kept (generation is deterministic, so generating again would
   give the same text). ``--reuse-check N`` generates N of those anyway and records whether they
   match.
+- ``--replay-retrieval RUN`` gives each question the passages a stored run retrieved instead of
+  searching again. Retrieval does not depend on the model that answers, so this is how another
+  answering model is measured on exactly the same passages (set it with ``OLLAMA_LLM_MODEL``).
+  The latency of such a run is the model's time only.
 - If MLflow is installed, the run is logged to ``mlflow.db`` (parameters + summary metrics).
 """
 
@@ -26,6 +30,7 @@ import argparse
 import json
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import replace
 from datetime import datetime
 
 from rag.config import ROOT, get_settings
@@ -73,13 +78,31 @@ def get_pipeline(version: str):
 REUSABLE = ("v0", "v1", "v3", "v4")  # one generation call with the same prompt over the retrieved passages
 
 
-def load_reusable(run: str, answer_prompt: str) -> dict[str, dict]:
+def load_reusable(run: str, answer_prompt: str, llm_model: str | None) -> dict[str, dict]:
     """Records of a stored run whose answers another version may keep (``--reuse-from``)."""
     summary = json.loads((RUNS_DIR / f"{run}.summary.json").read_text(encoding="utf-8"))
-    if summary.get("version") not in REUSABLE or summary.get("answer_prompt", "default") != answer_prompt:
+    same_way = (summary.get("version") in REUSABLE and summary.get("answer_prompt", "default") == answer_prompt
+                and summary.get("llm_model") == llm_model)
+    if not same_way:
         raise SystemExit(f"--reuse-from: {run} was not generated the way this run would generate")
     rows = (json.loads(line) for line in (RUNS_DIR / f"{run}.jsonl").read_text(encoding="utf-8").splitlines() if line)
     return {r["id"]: r for r in rows if r.get("verdict")}
+
+
+def replay_retrieval(pipeline, run: str, questions: list[Question]) -> None:
+    """Make ``pipeline.retrieve`` return what a stored run retrieved: same passages, order and scores."""
+    rows = (json.loads(line) for line in (RUNS_DIR / f"{run}.jsonl").read_text(encoding="utf-8").splitlines() if line)
+    sources = {r["id"]: r["sources"] for r in rows}
+    by_text = {q.question: sources[q.id] for q in questions}
+
+    def retrieve(question: str):
+        srcs = by_text[question]
+        hits = pipeline.store.get_hits([s["chunk_id"] for s in srcs])
+        if len(hits) != len(srcs):
+            raise SystemExit(f"--replay-retrieval: a passage of {run} is no longer in the index")
+        return [replace(h, score=s["score"]) for h, s in zip(hits, srcs, strict=True)]
+
+    pipeline.retrieve = retrieve
 
 
 def same_prompt(pipeline, hits, stored: dict) -> bool:
@@ -139,6 +162,9 @@ def main() -> None:
     parser.add_argument("--reuse-check", type=int, default=0, metavar="N",
                         help="with --reuse-from: generate N of the reusable questions anyway and record whether the "
                              "answer matches the stored one")
+    parser.add_argument("--replay-retrieval", default=None, metavar="RUN",
+                        help="answer from the passages this stored run retrieved instead of searching again "
+                             "(to measure another answering model on the same passages)")
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--judge-workers", type=int, default=3)
@@ -170,7 +196,11 @@ def main() -> None:
     if args.reuse_from:
         if args.version not in REUSABLE:
             raise SystemExit(f"--reuse-from does not apply to {args.version}")
-        stored = load_reusable(args.reuse_from, args.answer_prompt)
+        stored = load_reusable(args.reuse_from, args.answer_prompt, getattr(pipeline.llm, "model", None))
+    if args.replay_retrieval:
+        if args.version not in REUSABLE:
+            raise SystemExit(f"--replay-retrieval does not apply to {args.version}")
+        replay_retrieval(pipeline, args.replay_retrieval, questions)
     check_every = max(1, len(todo) // args.reuse_check) if args.reuse_check else 0
     judge = get_judge(args.judge_backend, args.judge_model)
     cache = None if args.no_judge_cache else JudgeCache(JUDGE_CACHE)
@@ -231,6 +261,7 @@ def main() -> None:
     summary = summarize(graded) | {
         "run": name, "version": args.version, "judge": f"{args.judge_backend}:{args.judge_model}",
         "judge_rubric": RUBRIC_VERSION, "answer_prompt": args.answer_prompt,
+        "retrieval_replayed_from": args.replay_retrieval,
         "reused_from": args.reuse_from, "reused": sum("reused_from" in r for r in results),
         "reuse_checked": sum("reuse_check" in r for r in results),
         "reuse_check_identical": sum(bool(r.get("reuse_check")) for r in results),

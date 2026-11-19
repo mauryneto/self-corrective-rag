@@ -90,14 +90,29 @@ def write_run(tmp_path, monkeypatch, version):
     monkeypatch.setattr(run, "RUNS_DIR", tmp_path)
     rows = [stored(), stored() | {"id": "q2", "verdict": None}]
     (tmp_path / "old.jsonl").write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
-    (tmp_path / "old.summary.json").write_text(json.dumps({"version": version}), encoding="utf-8")
+    summary = {"version": version, "llm_model": "local"}
+    (tmp_path / "old.summary.json").write_text(json.dumps(summary), encoding="utf-8")
 
 
 def test_only_graded_answers_of_a_compatible_run_can_be_reused(tmp_path, monkeypatch):
     write_run(tmp_path, monkeypatch, "v3")
-    assert list(run.load_reusable("old", "default")) == ["q1"]  # q2 has no verdict
+    assert list(run.load_reusable("old", "default", "local")) == ["q1"]  # q2 has no verdict
     with pytest.raises(SystemExit):
-        run.load_reusable("old", "complete")  # another answering prompt
+        run.load_reusable("old", "complete", "local")  # another answering prompt
+    with pytest.raises(SystemExit):
+        run.load_reusable("old", "default", "another-model")  # another model wrote those answers
     write_run(tmp_path, monkeypatch, "v2")
     with pytest.raises(SystemExit):
-        run.load_reusable("old", "default")  # V2 rewrites answers and adds passages
+        run.load_reusable("old", "default", "local")  # V2 rewrites answers and adds passages
+
+
+def test_replayed_retrieval_returns_the_stored_passages_in_order_with_their_scores(tmp_path, monkeypatch):
+    write_run(tmp_path, monkeypatch, "v1")
+    p = pipeline()
+    p.store.get_hits = lambda ids: [h for i in ids for h in HITS if h.chunk_id == i]
+    rows = [stored() | {"sources": [{"chunk_id": "rn-566#3", "score": 0.7}, {"chunk_id": "rn-566#1", "score": 0.6}]}]
+    (tmp_path / "old.jsonl").write_text(json.dumps(rows[0]), encoding="utf-8")
+    run.replay_retrieval(p, "old", [QUESTION])
+    hits = p.retrieve("Qual o prazo?")
+    assert [(h.chunk_id, h.score) for h in hits] == [("rn-566#3", 0.7), ("rn-566#1", 0.6)]
+    assert p.answer("Qual o prazo?").sources == hits  # the pipeline answers from them, no search

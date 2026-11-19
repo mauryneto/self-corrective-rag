@@ -10,7 +10,8 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 > search + reranker), V2 (self-corrective loop), V3 (scope gate) and V4 (reranker on the GPU)
 > measured in a reproducible setup: the same version run twice gives the same answers, so a
 > difference between rows comes from the version. Two reference rows (no retrieval, perfect
-> retrieval) bound what the architecture can add. The roadmap's versions are all measured.
+> retrieval) bound what the architecture can add. The roadmap's versions are all measured, and
+> the whole table was run again with a model half the size (7B) to see what the model is worth.
 
 ## Results
 
@@ -309,6 +310,61 @@ of the question") and three rows were run again (`--answer-prompt complete`; run
   identical to the stored answers, and the 62 answerable questions with the same passages in V1
   and in the ceiling got identical answers under the new prompt.
 
+### A smaller answering model: qwen2.5:7b
+
+Every row above answers with `qwen2.5:14b`, which does not fit on the 8 GB card: 33 of its 49
+layers run on the CPU and it writes 8 tokens per second. `qwen2.5:7b` fits whole and writes 59.
+The table was run again with it (runs `*_7b`). Each question got exactly the passages the 14B
+run of the same version got (`--replay-retrieval`), so the only difference between the two
+columns is the model. V2 is the exception: the answering model writes its follow-up searches,
+so it ran whole. Correct answers of 120:
+
+| Row | 14B | 7B | 7B gained / lost | McNemar p | Multi-hop (of 40) | Declines (of 60) | Citations supported | Model time, median |
+|---|---|---|---|---|---|---|---|---|
+| *Floor: no retrieval* | 14 | 9 | 2 / 7 | 0.18 | 0 → 1 | 26 → 33 | n/a | 13 s → 2.7 s |
+| V0 | 69 | 55 | 7 / 21 | 0.01 | 9 → 7 | 59 → 58 | 69% → 46% | 20 s → 3.3 s |
+| V1 | 78 | 58 | 5 / 25 | < 0.001 | 15 → 7 | 56 → 54 | 68% → 51% | 26 s → 3.3 s |
+| V2 (its own searches) | 79 | 58 | 7 / 28 | < 0.001 | 14 → 8 | 58 → 51 | 68% → 48% | 42 s → 9.2 s |
+| V3 and V4 | 78 | 58 | 5 / 25 | < 0.001 | 15 → 7 | 56 → 55 | 67% → 51% | 25 s → 3.2 s |
+| *Ceiling: perfect retrieval* | 88 | 75 | 10 / 23 | 0.04 | 20 → 17 | 56 → 54 | 71% → 64% | 32 s → 3.4 s |
+| *Ceiling, gold passages only* | 88 | 82 | 11 / 17 | 0.34 | 19 → 18 | n/a | 88% → 70% | 14 s → 2.6 s |
+
+- **Seven times faster, 20 correct answers fewer.** V4 end to end takes a median 3.7 s (p95
+  6.0 s) with the 7B, against 25 s (48 s) with the 14B, and gets 58 of 120 right against 78.
+- **The architecture does not make up for the model.** The 7B with the reranker (58) stays
+  below the 14B with plain vector search (69). The 7B with perfect retrieval (75) stays below
+  the 14B with V1's retrieval (78).
+- **What the smaller model loses is mostly the handling of a crowded prompt.** With only the
+  gold passages it is close to the 14B: 82 against 88, a difference the test does not
+  separate from chance. With V1's other passages around them it drops to 75 while the 14B
+  stays at 88, and with V1's real retrieval to 58.
+- **So retrieval is worth more to the weaker model, and the reranker gave it less.** From V1
+  to the ceiling the 7B gains 17 questions (p = 0.002), the 14B 10. But V0 → V1 is 55 → 58
+  for the 7B (13 gained, 10 lost, p = 0.68) against 69 → 78 for the 14B: a better ranking of
+  six passages helps less a model that is thrown by the five it should ignore.
+- **Citations suffer more than answers.** Half of the 7B's cited passages support the claim
+  (51% in V1, against 68%); even with only the gold passages, 70% against 88%.
+- **Two-article questions are where it falls furthest:** 7 of 40 in V1 against 15. With the
+  articles handed to it, 17 against 20.
+- **The scope gate changes an outcome for the first time.** The 7B answers one out-of-scope
+  question that the 14B declined on its own; the gate declines it (54 → 55 of 60).
+- **V2's loop does not help the 7B either, and its checks get worse.** V1 → V2 is 58 → 58
+  (8 gained, 8 lost). The 7B's context check asks for more passages on 66 of the 120
+  answerable questions (the 14B: 44), so its prompts grow to a median 9 passages, and the
+  ceiling rows show that more passages is what this model handles badly. Its answer check
+  flags 17 answers where the 14B's flags 31, though its citations are the less supported ones.
+  Declines drop from 54 to 51 of 60 and wrongful refusals rise from 3 to 9; with the 14B the
+  loop raised declines from 56 to 58.
+- **How it was measured.** Retrieval does not depend on the model that answers, so the 7B
+  runs replay the stored passages and only generate (V2 aside). "Model time" is the time of
+  the model's calls. The end-to-end figure comes from 36 questions run through the real V4
+  pipeline with the embedding model on the CPU (`EMBED_NUM_GPU=0`): the 7B, the reranker and
+  the embedding model do not fit on the card together, and Ollama swaps models on every
+  question otherwise (14 s per question instead of 3.7 s). With the embeddings computed on
+  the CPU, 35 of the 36 questions retrieved the same passages.
+- **The 7B is deterministic in this setup too.** 9 answers generated again in the V4 run and
+  35 in the end-to-end sample came out identical to the stored ones.
+
 ### Retrieval ablation (V1 design)
 
 Retrieval-only eval on the 120 answerable questions (`python -m rag.eval.retrieval_eval`; no
@@ -363,8 +419,8 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V3 | Scope gate: decline before calling the model when no retrieved passage is about the question | ✅ measured: same answers as V1; out-of-scope questions are declined in 10 s instead of 31 s, with no LLM call |
 | V4 | Faster: where each model runs. Reranker on the GPU, generator's context sized to the prompt | ✅ measured: same answers as V3; median latency 41 s → 25 s. V2's checks are not in V3, so there was none to skip |
 
-Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the answering model, a
-generator that fits on the GPU) are in [IDEAS.md](IDEAS.md).
+Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the answering model) are
+in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
@@ -420,7 +476,9 @@ curl -s localhost:8000/ask -H "content-type: application/json" \
 ```
 
 To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
-`ANTHROPIC_API_KEY` in `.env`.
+`ANTHROPIC_API_KEY` in `.env`. `OLLAMA_LLM_MODEL` picks the local model (`qwen2.5:14b` in the
+results table; `qwen2.5:7b` answers in 4 s instead of 25 s and gets fewer answers right, see
+"A smaller answering model").
 
 `OLLAMA_NUM_GPU` in `.env` pins how many layers of the local model run on the GPU. The default
 in `.env.example` (16) fits 8 GB of VRAM; adjust it to your card, and keep it fixed between the
