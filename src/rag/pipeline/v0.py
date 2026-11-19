@@ -53,7 +53,10 @@ class V0Pipeline:
 
     def answer(self, question: str) -> Answer:
         t0 = time.perf_counter()
-        hits = self.retrieve(question)
+        return self.answer_from(question, self.retrieve(question), t0)
+
+    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None) -> Answer:
+        """The generation step, given the passages. ``t0``: when the question arrived."""
         t_retrieval = time.perf_counter() - t0
 
         usage = Usage()
@@ -69,4 +72,5 @@ class V0Pipeline:
             latency_s=time.perf_counter() - t0,
             usage=usage,
             retrieval_latency_s=t_retrieval,
+            trace=trace or {},
         )

@@ -1,0 +1,141 @@
+{
+ "run": "v1_repro",
+ "checks_run": "v2_repro_drafts",
+ "curve": [
+  {
+   "threshold": 0.02,
+   "gated": 19,
+   "gated_out_of_scope": 17,
+   "gated_unanswerable": 2,
+   "gated_answerable": 0,
+   "gated_answerable_correct": 0,
+   "declined": 56,
+   "correct": 78
+  },
+  {
+   "threshold": 0.05,
+   "gated": 24,
+   "gated_out_of_scope": 18,
+   "gated_unanswerable": 6,
+   "gated_answerable": 0,
+   "gated_answerable_correct": 0,
+   "declined": 56,
+   "correct": 78
+  },
+  {
+   "threshold": 0.1,
+   "gated": 31,
+   "gated_out_of_scope": 19,
+   "gated_unanswerable": 12,
+   "gated_answerable": 0,
+   "gated_answerable_correct": 0,
+   "declined": 56,
+   "correct": 78
+  },
+  {
+   "threshold": 0.2,
+   "gated": 37,
+   "gated_out_of_scope": 19,
+   "gated_unanswerable": 15,
+   "gated_answerable": 3,
+   "gated_answerable_correct": 2,
+   "declined": 56,
+   "correct": 76
+  },
+  {
+   "threshold": 0.35,
+   "gated": 48,
+   "gated_out_of_scope": 20,
+   "gated_unanswerable": 21,
+   "gated_answerable": 7,
+   "gated_answerable_correct": 4,
+   "declined": 58,
+   "correct": 74
+  },
+  {
+   "threshold": 0.5,
+   "gated": 60,
+   "gated_out_of_scope": 20,
+   "gated_unanswerable": 28,
+   "gated_answerable": 12,
+   "gated_answerable_correct": 5,
+   "declined": 58,
+   "correct": 73
+  }
+ ],
+ "cross_validation": [
+  {
+   "fold": 0,
+   "threshold": 0.0564,
+   "answerable_declined": 0,
+   "to_decline_declined": 7,
+   "to_decline": 16
+  },
+  {
+   "fold": 1,
+   "threshold": 0.0564,
+   "answerable_declined": 0,
+   "to_decline_declined": 5,
+   "to_decline": 12
+  },
+  {
+   "fold": 2,
+   "threshold": 0.0564,
+   "answerable_declined": 0,
+   "to_decline_declined": 6,
+   "to_decline": 11
+  },
+  {
+   "fold": 3,
+   "threshold": 0.0564,
+   "answerable_declined": 0,
+   "to_decline_declined": 2,
+   "to_decline": 10
+  },
+  {
+   "fold": 4,
+   "threshold": 0.0886,
+   "answerable_declined": 0,
+   "to_decline_declined": 8,
+   "to_decline": 11
+  }
+ ],
+ "context_check": {
+  "no rule": {
+   "gated": 0,
+   "gated_out_of_scope": 0,
+   "gated_unanswerable": 0,
+   "gated_answerable": 0,
+   "gated_answerable_correct": 0,
+   "declined": 55,
+   "correct": 82
+  },
+  "context check says insufficient": {
+   "gated": 102,
+   "gated_out_of_scope": 20,
+   "gated_unanswerable": 38,
+   "gated_answerable": 44,
+   "gated_answerable_correct": 25,
+   "declined": 58,
+   "correct": 57
+  },
+  "insufficient and best score < 0.5": {
+   "gated": 54,
+   "gated_out_of_scope": 20,
+   "gated_unanswerable": 28,
+   "gated_answerable": 6,
+   "gated_answerable_correct": 2,
+   "declined": 58,
+   "correct": 80
+  },
+  "insufficient and best score < 0.05": {
+   "gated": 24,
+   "gated_out_of_scope": 18,
+   "gated_unanswerable": 6,
+   "gated_answerable": 0,
+   "gated_answerable_correct": 0,
+   "declined": 55,
+   "correct": 82
+  }
+ }
+}

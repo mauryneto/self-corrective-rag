@@ -7,10 +7,10 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 
 > **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
 > 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
-> search + reranker) and V2 (self-corrective loop) measured in a reproducible setup: the same
+> search + reranker), V2 (self-corrective loop) and V3 (scope gate) measured in a reproducible setup: the same
 > version run twice gives the same answers, so a difference between rows comes from the version.
 > Two reference rows (no retrieval, perfect retrieval) bound what the architecture can add.
-> The guardrail comes next.
+> Speed (V4) comes next.
 
 ## Results
 
@@ -23,14 +23,17 @@ Measured on the 180-question eval set (`eval/runs/*_repro.*`). Each new version 
 | V1 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 68% | 42s / 68s | US$ 0 (local) |
 | V2 | 66% | 78% | 35% | 82% | 0.77 | 97% | 88% | 68% | 55s / 140s | US$ 0 (local) |
 | V2 without the answer check | 68% | 83% | 43% | 82% | 0.77 | 92% | 95% | 68% | n/a | US$ 0 (local) |
+| V3 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 68% | 41s / 68s | US$ 0 (local) |
 | *Ceiling: perfect retrieval* | 73% | 88% | 50% | 100% | 1.00 | 93% | 100% | 71% | n/a | US$ 0 (local) |
 | *Ceiling, gold passages only* | 73% | 91% | 48% | 100% | 1.00 | n/a | n/a | 88% | n/a | US$ 0 (local) |
 
 "Correct", "Multi-hop correct", Recall@5 and MRR are over the 120 answerable questions; the two
 refusal columns over the 60 it should decline. Every version answers with the same prompt and
 `qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB), hence the latency and zero cost; only what the
-row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below). The last row
-is the V2 run graded on the drafts written before the answer check (`regrade --drafts`).
+row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated below). "V2 without
+the answer check" is the V2 run graded on the drafts written before the answer check
+(`regrade --drafts`). V3 is V1 plus a gate before the model, so only the 24 questions the gate
+declines needed a run; the others have V1's answers (`--reuse-from v1_repro`, see V3 below).
 
 The rows in italics are references, not versions (`rag.eval.reference`): the same model with no
 passages at all, and with the gold passages handed to it (first in the prompt, followed by V1's
@@ -64,6 +67,7 @@ McNemar's exact test):
 | V1 → V2 without the answer check | 78 → 82 | 8 / 4 | 0.39 |
 | V0 → V2 without the answer check | 69 → 82 | 20 / 7 | 0.02 |
 | Answer check: without → with | 82 → 79 | 1 / 4 | 0.38 |
+| V1 → V3 | 78 → 78 | 0 / 0 | 1.00 |
 | Floor → V0 | 14 → 69 | 58 / 3 | < 0.001 |
 | V1 → ceiling | 78 → 88 | 15 / 5 | 0.04 |
 | Ceiling → ceiling, gold passages only | 88 → 88 | 11 / 11 | 1.00 |
@@ -146,8 +150,8 @@ answer, from a separate process. The earlier runs stay in `eval/runs/` (`v0_base
   fusing BM25 with the vectors did not beat vector search on this corpus (bge-m3 is already
   strong and BM25 adds noise); the 568M multilingual cross-encoder is what moved recall.
 - **A trade-off appeared in declining: 59 → 56 of 60.** With more relevant-looking passages in
-  the prompt, the model answers some questions it should decline. That is the job of V3's
-  guardrail.
+  the prompt, the model answers some questions it should decline. V3's gate does not recover
+  them: their passages look relevant (see V3).
 - **It costs latency:** the reranker runs on CPU (median 14 s per question), p50 20 s → 42 s.
   Cutting that is part of V4.
 - **Multi-hop is still the weak spot** (15 of 40): even with a better ranking, a single search
@@ -166,7 +170,7 @@ the passages it cites and rewrite it once if a claim is unsupported):
   that suggested a small gain did not replicate.
 - **The context check is a strong but noisy signal for declining.** It flags 58 of the 60
   questions the system should decline as "the passages don't cover this", and also 44 of the
-  120 answerable ones. V3's guardrail starts from this signal and has to fix its precision.
+  120 answerable ones. V3 tested it as a rule for declining and dropped it (see V3).
 - **Decomposition finds little of what is missing.** The model flags 13 of the 22 multi-hop
   questions whose context is incomplete and writes sensible follow-up queries, but those
   searches complete only 3 more of them (18 → 21 of 40; context recall 83% → 88%).
@@ -187,6 +191,49 @@ above):
 | **2 new passages per query (V2)** | **0.867** | **0.725** | **20/40** | **7.0** |
 | 3 new passages per query | 0.867 | 0.725 | 20/40 | 7.0 |
 | 2 per query, rerank pool 20 | 0.867 | 0.725 | 21/40 | 7.0 |
+
+**V3** (V1 plus a scope gate: when the best reranker score among the retrieved passages is below
+0.05, the system declines with a fixed message and does not call the model):
+- **No quality number changes: 78 of 120 correct, 56 of 60 declined, as in V1.** The gate
+  declines 24 questions (18 of the 20 out-of-scope ones, 6 of the 40 unanswerable ones). The
+  model already declined all 24 in V1, and no answerable question is below the gate.
+- **What it buys is time and certainty.** Those 24 take a median 9.6 s (retrieval only)
+  instead of 31 s, with no LLM call: 156 calls instead of 180 over the eval set, mean latency
+  43.9 s → 40.7 s. The median barely moves (42 s → 41 s) because it sits among the answerable
+  questions. And these refusals no longer depend on the model obeying the prompt: with no
+  passages at all, the same model answers 34 of the 60 (the floor row).
+- **V2's context check is not usable as the guardrail**, though the roadmap planned to start
+  from it. "Decline when the check says the passages don't cover the question" declines 58 of
+  60 and also 44 answerable questions, 25 of them answered correctly (82 → 57 correct).
+  Restricted to questions whose best score is below 0.5, it reaches 58 of 60 at the price of 2
+  correct answers and 5 more wrongful refusals: the trade V2's answer check already makes. So
+  the gate sits on V1, and V2's loop is not part of V3.
+- **The four questions that should be declined and are answered stay out of reach.** Two
+  retrieve passages that look like the answer (best score above 0.95, e.g. a 300-day grace
+  period stated for another situation) and pass V2's context check too. The other two score
+  0.30, and a threshold that catches them also declines 7 answerable questions, 4 of them
+  answered correctly. Unanswerable questions about health plans look like answerable ones to
+  the reranker (12 of 40 score above 0.5); there the prompt does the declining, 37 of 40.
+- **The threshold was chosen on the eval set.** 0.05 is half the lowest best score among the
+  120 answerable questions (0.11), rounded down. A check of that rule: picked on four folds, it
+  declined no answerable question of the fifth, in each of the five folds.
+- **Only what V3 changes was run.** Past the gate V3 does exactly what V1 does and generation
+  is deterministic, so the run took 4 minutes instead of 2 hours: the 24 gated questions
+  ran, 2 more as a check, and the other 154 keep V1's stored answer, verdict and latency. The
+  26 that ran retrieved exactly V1's passages, and 3 answers generated again past the gate
+  came out identical to V1's.
+- **Left for V4:** a declined question still pays for the reranker (about 10 s on CPU).
+
+Threshold curve on the V1 run (`python -m rag.eval.scope_gate_eval`, no model call):
+
+| Threshold | Out-of-scope declined (of 20) | Unanswerable declined (of 40) | Answerable declined (correct in V1) | Declines (of 60) | Correct (of 120) |
+|---|---|---|---|---|---|
+| 0.02 | 17 | 2 | 0 | 56 | 78 |
+| **0.05 (V3)** | **18** | **6** | **0** | **56** | **78** |
+| 0.10 | 19 | 12 | 0 | 56 | 78 |
+| 0.20 | 19 | 15 | 3 (2) | 56 | 76 |
+| 0.35 | 20 | 21 | 7 (4) | 58 | 74 |
+| 0.50 | 20 | 28 | 12 (5) | 58 | 73 |
 
 ### Experiment: a completeness rule in the answering prompt
 
@@ -273,7 +320,7 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V0 | Naive RAG: vector search only | ✅ |
 | V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
 | V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: no gain in correct answers over V1; the answer check trades accuracy for refusals |
-| V3 | Scope guardrail: decline what the corpus can't answer, starting from V2's context check | ⏳ |
+| V3 | Scope gate: decline before calling the model when no retrieved passage is about the question | ✅ measured: same answers as V1; out-of-scope questions are declined in 10 s instead of 31 s, with no LLM call |
 | V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
 
 Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the
@@ -384,6 +431,8 @@ validated against human labels (see Judge validation).
 - **Negative results and corrections stay in the README.** V2 did not pay for its latency with
   this model, and the first results table blamed on noise what was a hardware difference; both
   are written down, with the eval showing which of V2's steps still earn their place.
+- **Run only what a change can affect.** With deterministic generation, a version that differs
+  from another on 24 questions is measured on those 24; the rest is reused and marked as such.
 - **A small local model on purpose.** Every version answers with the same 14B local model, so the
   table shows how much the architecture improves a small model, not how good a frontier model is.
 - **Bound the question before answering it.** A floor (no retrieval) and a ceiling (gold

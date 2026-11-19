@@ -19,7 +19,7 @@ app = FastAPI(title="self-corrective-rag", version="0.1.0")
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=2000)
-    version: Literal["v0", "v1", "v2"] = "v1"
+    version: Literal["v0", "v1", "v2", "v3"] = "v1"
 
 
 class Source(BaseModel):
@@ -49,6 +49,10 @@ def get_pipeline(version: str = "v1") -> V0Pipeline:
         from rag.pipeline.v2 import V2Pipeline
 
         return V2Pipeline()
+    if version == "v3":
+        from rag.pipeline.v3 import V3Pipeline
+
+        return V3Pipeline()
     from rag.pipeline.v1 import V1Pipeline
 
     return V1Pipeline()
