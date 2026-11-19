@@ -19,6 +19,7 @@ dependencies = [
     "pydantic>=2.8",
     "pydantic-settings>=2.4",
     "sentence-transformers>=6.3.0",
+    "torch>=2.9",
     "uvicorn>=0.30",
 ]
 
@@ -27,6 +28,16 @@ dev = [
     "pytest>=8.3",
     "ruff>=0.6",
 ]
+
+# The reranker runs on the GPU in V4. On Windows the PyPI build of torch is CPU-only, so the CUDA
+# build comes from PyTorch's own index; elsewhere PyPI's torch is used as before.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130", marker = "sys_platform == 'win32'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

@@ -1,11 +1,6 @@
 """V3's scope gate with in-memory fakes: no database, no Ollama."""
 
-import json
-
-import pytest
-
 from rag.costs import CallRecord
-from rag.eval import run
 from rag.eval.scope_gate_eval import apply_rule, cross_validate, top_score
 from rag.pipeline.v1 import V1Pipeline
 from rag.pipeline.v3 import DECLINED, V3Pipeline
@@ -102,25 +97,3 @@ def test_cross_validation_picks_the_threshold_without_the_held_out_fold():
     assert sum(f["to_decline"] for f in folds) == 3
     for f in folds:
         assert f["threshold"] in (0.1, 0.15, 0.45)  # half of 0.2; of 0.3 or 0.9 when "b" (and "c") are held out
-
-
-def stored_run(tmp_path, monkeypatch, version="v1"):
-    monkeypatch.setattr(run, "RUNS_DIR", tmp_path)
-    rows = [{"id": "q1", "answer": "Sete dias [1].", "verdict": "correct", "sources": [{"score": 0.9}, {"score": 0.1}]},
-            {"id": "q2", "answer": "Não sei.", "verdict": "correct", "sources": [{"score": 0.04}, {"score": 0.01}]}]
-    (tmp_path / "old.jsonl").write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
-    (tmp_path / "old.summary.json").write_text(json.dumps({"version": version}), encoding="utf-8")
-
-
-def test_reuse_keeps_the_v1_record_only_where_the_gate_lets_the_question_through(tmp_path, monkeypatch):
-    stored_run(tmp_path, monkeypatch)
-    kept = run.reuse_past_gate("old", 0.05)
-    assert list(kept) == ["q1"]  # q2 is below the gate: V3 answers it differently, so it must run
-    assert kept["q1"]["answer"] == "Sete dias [1]." and kept["q1"]["reused_from"] == "old"
-    assert kept["q1"]["trace"]["scope_gate"] == {"top_score": 0.9, "min_top_score": 0.05, "declined": False}
-
-
-def test_reuse_refuses_a_run_that_is_not_v1(tmp_path, monkeypatch):
-    stored_run(tmp_path, monkeypatch, version="v2")
-    with pytest.raises(SystemExit):
-        run.reuse_past_gate("old", 0.05)

@@ -29,7 +29,7 @@ from rag.embeddings import OllamaEmbedder
 from rag.llm import LLM
 from rag.pipeline.v0 import Answer
 from rag.pipeline.v1 import V1Pipeline
-from rag.store import Store
+from rag.store import Hit, Store
 
 MIN_TOP_SCORE = 0.05
 DECLINED = ("Não encontrei nas normas da ANS trechos que tratem dessa pergunta, por isso não tenho como "
@@ -45,14 +45,14 @@ class V3Pipeline(V1Pipeline):
         super().__init__(store=store, embedder=embedder, llm=llm, top_k=top_k, reranker=reranker)
         self.min_top_score = min_top_score
 
-    def answer(self, question: str) -> Answer:
-        t0 = time.perf_counter()
-        hits = self.retrieve(question)
+    def gate(self, hits: list[Hit]) -> dict:
         top = max((h.score for h in hits), default=0.0)
-        declined = top < self.min_top_score
-        trace = {"scope_gate": {"top_score": round(top, 4), "min_top_score": self.min_top_score, "declined": declined}}
-        if not declined:
-            return self.answer_from(question, hits, t0, trace)
+        return {"top_score": round(top, 4), "min_top_score": self.min_top_score, "declined": top < self.min_top_score}
+
+    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None) -> Answer:
+        trace = (trace or {}) | {"scope_gate": self.gate(hits)}
+        if not trace["scope_gate"]["declined"]:
+            return super().answer_from(question, hits, t0, trace)
         elapsed = time.perf_counter() - t0
         # the passages stay in the record: they are what the retrieval metrics are computed on
         return Answer(question=question, answer=DECLINED, sources=hits, cited=[], version=self.version,

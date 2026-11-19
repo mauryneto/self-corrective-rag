@@ -7,10 +7,10 @@ ablation on a fixed eval set, reporting accuracy, refusal precision, latency and
 
 > **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
 > 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
-> search + reranker), V2 (self-corrective loop) and V3 (scope gate) measured in a reproducible setup: the same
-> version run twice gives the same answers, so a difference between rows comes from the version.
-> Two reference rows (no retrieval, perfect retrieval) bound what the architecture can add.
-> Speed (V4) comes next.
+> search + reranker), V2 (self-corrective loop), V3 (scope gate) and V4 (reranker on the GPU)
+> measured in a reproducible setup: the same version run twice gives the same answers, so a
+> difference between rows comes from the version. Two reference rows (no retrieval, perfect
+> retrieval) bound what the architecture can add. The roadmap's versions are all measured.
 
 ## Results
 
@@ -24,6 +24,7 @@ Measured on the 180-question eval set (`eval/runs/*_repro.*`). Each new version 
 | V2 | 66% | 78% | 35% | 82% | 0.77 | 97% | 88% | 68% | 55s / 140s | US$ 0 (local) |
 | V2 without the answer check | 68% | 83% | 43% | 82% | 0.77 | 92% | 95% | 68% | n/a | US$ 0 (local) |
 | V3 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 68% | 41s / 68s | US$ 0 (local) |
+| V4 | 65% | 83% | 38% | 82% | 0.77 | 93% | 93% | 67% | 25s / 48s | US$ 0 (local) |
 | *Ceiling: perfect retrieval* | 73% | 88% | 50% | 100% | 1.00 | 93% | 100% | 71% | n/a | US$ 0 (local) |
 | *Ceiling, gold passages only* | 73% | 91% | 48% | 100% | 1.00 | n/a | n/a | 88% | n/a | US$ 0 (local) |
 
@@ -34,6 +35,8 @@ row's version changes differs. Judge: Claude Haiku 5.5, rubric v2 (validated bel
 the answer check" is the V2 run graded on the drafts written before the answer check
 (`regrade --drafts`). V3 is V1 plus a gate before the model, so only the 24 questions the gate
 declines needed a run; the others have V1's answers (`--reuse-from v1_repro`, see V3 below).
+V4 changes where the reranker runs, not what the model is asked: retrieval ran for all 180
+questions and the model only for the 4 whose passages came in another order (see V4 below).
 
 The rows in italics are references, not versions (`rag.eval.reference`): the same model with no
 passages at all, and with the gold passages handed to it (first in the prompt, followed by V1's
@@ -68,6 +71,7 @@ McNemar's exact test):
 | V0 → V2 without the answer check | 69 → 82 | 20 / 7 | 0.02 |
 | Answer check: without → with | 82 → 79 | 1 / 4 | 0.38 |
 | V1 → V3 | 78 → 78 | 0 / 0 | 1.00 |
+| V3 → V4 | 78 → 78 | 0 / 0 | 1.00 |
 | Floor → V0 | 14 → 69 | 58 / 3 | < 0.001 |
 | V1 → ceiling | 78 → 88 | 15 / 5 | 0.04 |
 | Ceiling → ceiling, gold passages only | 88 → 88 | 11 / 11 | 1.00 |
@@ -235,6 +239,42 @@ Threshold curve on the V1 run (`python -m rag.eval.scope_gate_eval`, no model ca
 | 0.35 | 20 | 21 | 7 (4) | 58 | 74 |
 | 0.50 | 20 | 28 | 12 (5) | 58 | 73 |
 
+**V4** (V3 with the reranker on the GPU in half precision; same passages, same prompt, same
+model):
+- **Median latency 41 s → 25 s, p95 68 s → 48 s, with the same verdict on all 180
+  questions.** Retrieval goes from a median 13.9 s to 0.47 s. A question the gate declines
+  takes 0.5 s instead of 9.6 s.
+- **Where the time was**, step by step for one question: 8.4 s in the reranker on the CPU for
+  its 20 candidates (14 s during an eval run, when the judge shares the CPU), 0.2 s in the
+  embedding and both searches, about 26 s in the model (it reads the prompt at 570 tokens per
+  second and writes at 8).
+- **Same passages.** On the GPU the reranker returns the same six passages for all 180
+  questions, and the gate decides the same. In 4 questions two neighbouring passages swap
+  places, so the prompt changes: those 4 were generated again. Three answers changed wording,
+  no verdict changed, one citation check flipped (68% → 67% supported).
+- **Making room in 8 GB.** The card holds 16 of the generator's layers, the embedding model
+  and now the reranker (6.7 GB in use) because V4 asks for a context window of 8,192 tokens
+  instead of 16,384. That frees 1.2 GB and changes no answer: 13 of 13 checked, the longest
+  prompts among them.
+- **The generator is the limit, and it is a memory limit.** The 14B model takes 9 GB and the
+  card has 8, so 33 of its 49 layers run on the CPU; while it writes, the GPU sits at about
+  13% utilisation. More layers on the GPU were tried: 22 give 9.1 tokens per second and 28
+  give 10.2, against 8.0 with 16. Not adopted: 28 push the embedding model off the card, and
+  any change of split changes the answers, so the row would no longer be comparable.
+- **Only what V4 changes was run** (`--reuse-from v3_repro --reuse-check 12`, 9 minutes).
+  Retrieval ran for all 180 questions. 142 kept the stored answer because the prompt would be
+  the same, 24 were declined by the gate, 4 were generated because the order changed, and 10
+  were generated anyway as a check: 10 of 10 identical to the stored answers. A kept answer's
+  latency is this run's retrieval plus the stored time of the model's call.
+- **Read the latency column with a margin.** The model's speed on this laptop changes with
+  what else is running: the 11 answers generated again with identical text took 16% longer
+  than in V1's run. The reranker on the GPU does not slow the model (same tokens per second
+  with and without it loaded).
+- **Without a GPU** V4 falls back to the CPU reranker and is V3. Sorting the candidates by
+  length would cut the CPU time from 8.4 s to 6.9 s with the same ranking; not included.
+- **Not done:** streaming the answer. The first words could be on screen about 5 s after the
+  question (0.5 s of retrieval, 4 s for the model to read the prompt) instead of 25 s.
+
 ### Experiment: a completeness rule in the answering prompt
 
 The reading of the ceiling failures pointed at answers that leave out a condition or exception
@@ -321,10 +361,10 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 | V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
 | V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: no gain in correct answers over V1; the answer check trades accuracy for refusals |
 | V3 | Scope gate: decline before calling the model when no retrieved passage is about the question | ✅ measured: same answers as V1; out-of-scope questions are declined in 10 s instead of 31 s, with no LLM call |
-| V4 | Faster: where each model runs (generator, embeddings, reranker), skip the checks when they are not needed | ⏳ |
+| V4 | Faster: where each model runs. Reranker on the GPU, generator's context sized to the prompt | ✅ measured: same answers as V3; median latency 41 s → 25 s. V2's checks are not in V3, so there was none to skip |
 
-Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the
-answering model) are in [IDEAS.md](IDEAS.md).
+Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the answering model, a
+generator that fits on the GPU) are in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
@@ -386,6 +426,11 @@ To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
 in `.env.example` (16) fits 8 GB of VRAM; adjust it to your card, and keep it fixed between the
 runs you want to compare.
 
+`/ask` answers with V4 by default (`"version": "v1"` and the others are accepted). V4 puts the
+reranker on an NVIDIA GPU when there is one. On Windows `uv sync` installs the CUDA build of
+PyTorch for that (PyPI's Windows build is CPU-only); without a GPU V4 runs the reranker on the
+CPU, as V3 does.
+
 ## Eval set
 
 `eval/questions.jsonl`: 180 questions in Portuguese, fixed and versioned.
@@ -431,8 +476,10 @@ validated against human labels (see Judge validation).
 - **Negative results and corrections stay in the README.** V2 did not pay for its latency with
   this model, and the first results table blamed on noise what was a hardware difference; both
   are written down, with the eval showing which of V2's steps still earn their place.
-- **Run only what a change can affect.** With deterministic generation, a version that differs
-  from another on 24 questions is measured on those 24; the rest is reused and marked as such.
+- **Run only what a change can affect.** With deterministic generation, a stored answer is
+  kept whenever the new version would send the model the same prompt. V3 was measured on the 24
+  questions it changes and V4 on 4, plus a sample generated again to check; kept answers are
+  marked as such.
 - **A small local model on purpose.** Every version answers with the same 14B local model, so the
   table shows how much the architecture improves a small model, not how good a frontier model is.
 - **Bound the question before answering it.** A floor (no retrieval) and a ceiling (gold

@@ -67,3 +67,17 @@ model", would contrast the two.
 
 Cheaper than idea 3 and fits in 8 GB, but the ceiling says retrieval has little left to give
 (about 10 questions over V1, 6 over V2 without the answer check). Low priority.
+
+## 5. A generator that fits on the GPU
+
+V4 showed where the remaining latency is: the 14B model takes 9 GB, the card has 8, so 33 of its
+49 layers run on the CPU and it writes 8 tokens per second (about 26 s of the 25 to 41 s per
+question). No setting fixes that; a model that fits does.
+
+- **The row:** V4 with `qwen2.5:7b` (or another model under 6 GB) answering. Expected to be
+  several times faster and less accurate. It would say how many correct answers the larger
+  model buys and at what cost in seconds, on the same architecture.
+- **Cost:** one full run of the 180 questions, since every answer changes. Short if the model
+  is fast.
+- **Care:** a new model needs its own `OLLAMA_NUM_GPU` (all layers) and its own determinism
+  check before the row is trusted.

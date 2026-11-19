@@ -12,8 +12,11 @@
   threads, so the judge works while the next answer is being generated.
 - Verdicts are cached in ``eval/judge_cache.jsonl`` by everything the judge sees: an answer that
   comes out identical in a later run keeps its verdict (``--no-judge-cache`` to grade afresh).
-- ``--reuse-from v1_repro`` (V3 only) runs just the questions V3 treats differently from V1: the
-  ones its scope gate declines. The others keep the stored V1 answer and verdict.
+- ``--reuse-from RUN`` generates only what the version changes. Retrieval runs for every
+  question; when the passages are the ones the stored run put in the prompt, in the same order,
+  the stored answer and verdict are kept (generation is deterministic, so generating again would
+  give the same text). ``--reuse-check N`` generates N of those anyway and records whether they
+  match.
 - If MLflow is installed, the run is logged to ``mlflow.db`` (parameters + summary metrics).
 """
 
@@ -26,10 +29,12 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
 
 from rag.config import ROOT, get_settings
+from rag.costs import CallRecord, Usage
 from rag.eval.dataset import Question, load_questions
 from rag.eval.judge import DEFAULT_JUDGE_MODEL, RUBRIC_VERSION, JudgeCache, get_judge, grade
 from rag.eval.metrics import retrieval_scores, summarize
 from rag.pipeline.prompts import ANSWER_SYSTEMS
+from rag.pipeline.v0 import Answer
 
 RUNS_DIR = ROOT / "eval" / "runs"
 JUDGE_CACHE = ROOT / "eval" / "judge_cache.jsonl"
@@ -52,6 +57,10 @@ def get_pipeline(version: str):
         from rag.pipeline.v3 import V3Pipeline
 
         return V3Pipeline()
+    if version == "v4":
+        from rag.pipeline.v4 import V4Pipeline
+
+        return V4Pipeline()
     if version in ("floor", "ceiling", "ceiling_gold"):  # reference rows, see rag.eval.reference
         from rag.eval.reference import CeilingPipeline, FloorPipeline, load_replay
 
@@ -61,27 +70,40 @@ def get_pipeline(version: str):
     raise SystemExit(f"unknown pipeline version: {version}")
 
 
-def reuse_past_gate(run: str, min_top_score: float) -> dict[str, dict]:
-    """Stored V1 records of the questions whose best passage passes V3's scope gate.
+REUSABLE = ("v0", "v1", "v3", "v4")  # one generation call with the same prompt over the retrieved passages
 
-    Past the gate V3 does exactly what V1 does, and generation is deterministic (README,
-    "Reproducibility"), so the stored answer and verdict are V3's too. Generating them again would
-    only repeat the V1 run. Each record is marked with ``reused_from``; its latency is the one
-    measured in that run.
-    """
+
+def load_reusable(run: str, answer_prompt: str) -> dict[str, dict]:
+    """Records of a stored run whose answers another version may keep (``--reuse-from``)."""
     summary = json.loads((RUNS_DIR / f"{run}.summary.json").read_text(encoding="utf-8"))
-    if summary.get("version") != "v1" or summary.get("answer_prompt", "default") != "default":
-        raise SystemExit(f"--reuse-from needs a V1 run made with the official prompt; {run} is not one")
-    out = {}
-    for line in (RUNS_DIR / f"{run}.jsonl").read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        r = json.loads(line)
-        top = max((s["score"] for s in r["sources"]), default=0.0)
-        if top >= min_top_score:
-            gate = {"top_score": top, "min_top_score": min_top_score, "declined": False}
-            out[r["id"]] = r | {"trace": {"scope_gate": gate}, "reused_from": run}
-    return out
+    if summary.get("version") not in REUSABLE or summary.get("answer_prompt", "default") != answer_prompt:
+        raise SystemExit(f"--reuse-from: {run} was not generated the way this run would generate")
+    rows = (json.loads(line) for line in (RUNS_DIR / f"{run}.jsonl").read_text(encoding="utf-8").splitlines() if line)
+    return {r["id"]: r for r in rows if r.get("verdict")}
+
+
+def same_prompt(pipeline, hits, stored: dict) -> bool:
+    """Would this pipeline send the model exactly the prompt the stored answer came from?"""
+    if stored.get("trace", {}).get("scope_gate", {}).get("declined"):
+        return False  # that answer is a fixed refusal, the model never wrote it
+    if hasattr(pipeline, "gate") and pipeline.gate(hits)["declined"]:
+        return False
+    return [h.chunk_id for h in hits] == [s["chunk_id"] for s in stored["sources"]]
+
+
+def reused_record(q: Question, pipeline, hits, stored: dict, run: str, retrieval_s: float) -> dict:
+    """The stored answer and verdict as this version's record. Retrieval is this run's (passages,
+    scores, time); the model's time is the stored one, since the same call would be made."""
+    usage = Usage()
+    u = stored["usage"]
+    usage.add(CallRecord("generate", getattr(pipeline.llm, "model", ""), u["input_tokens"], u["output_tokens"],
+                         u["llm_latency_s"]))
+    trace = {"scope_gate": pipeline.gate(hits)} if hasattr(pipeline, "gate") else {}
+    answer = Answer(question=q.question, answer=stored["answer"], sources=hits, cited=stored["cited"],
+                    version=pipeline.version, latency_s=retrieval_s + u["llm_latency_s"], usage=usage,
+                    retrieval_latency_s=retrieval_s, trace=trace)
+    verdict = {k: stored[k] for k in ("verdict", "refused", "citations_supported", "judge_reasoning")}
+    return answer_record(q, answer) | verdict | {"reused_from": run}
 
 
 def answer_record(q: Question, answer) -> dict:
@@ -112,8 +134,11 @@ def main() -> None:
                         help="system prompt of the answering step (rag.pipeline.prompts.ANSWER_SYSTEMS); "
                              "anything but the default is an experiment and needs its own --name")
     parser.add_argument("--reuse-from", default=None, metavar="RUN",
-                        help="v3 only: questions that pass the scope gate keep the answer and verdict of this stored "
-                             "V1 run instead of being generated again")
+                        help="keep this stored run's answer and verdict for every question whose retrieved passages "
+                             "are the same, in the same order; only the others are generated")
+    parser.add_argument("--reuse-check", type=int, default=0, metavar="N",
+                        help="with --reuse-from: generate N of the reusable questions anyway and record whether the "
+                             "answer matches the stored one")
     parser.add_argument("--judge-backend", default="claude-code", choices=["claude-code", "anthropic"])
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--judge-workers", type=int, default=3)
@@ -141,17 +166,12 @@ def main() -> None:
         if not hasattr(pipeline, "answer_system"):
             raise SystemExit(f"--answer-prompt does not apply to {args.version}: it has its own prompt")
         pipeline.answer_system = ANSWER_SYSTEMS[args.answer_prompt]
+    stored = {}
     if args.reuse_from:
-        if args.version != "v3":
-            raise SystemExit("--reuse-from only applies to v3: it is V1 plus a gate before the model")
-        kept = reuse_past_gate(args.reuse_from, pipeline.min_top_score)
-        with out_path.open("a", encoding="utf-8") as fh:
-            for q in todo:
-                if q.id in kept:
-                    fh.write(json.dumps(kept[q.id], ensure_ascii=False) + "\n")
-                    done[q.id] = kept[q.id]
-        todo = [q for q in todo if q.id not in done]
-        print(f"kept from {args.reuse_from}: {sum('reused_from' in r for r in done.values())}, {len(todo)} to run")
+        if args.version not in REUSABLE:
+            raise SystemExit(f"--reuse-from does not apply to {args.version}")
+        stored = load_reusable(args.reuse_from, args.answer_prompt)
+    check_every = max(1, len(todo) // args.reuse_check) if args.reuse_check else 0
     judge = get_judge(args.judge_backend, args.judge_model)
     cache = None if args.no_judge_cache else JudgeCache(JUDGE_CACHE)
     t0 = time.perf_counter()
@@ -178,9 +198,25 @@ def main() -> None:
                     done[rec["id"]] = rec
                     pending.remove(f)
 
-        for q in todo:
-            answer = pipeline.answer(q.question)
+        for pos, q in enumerate(todo):
+            check = False
+            if q.id in stored:
+                t_q = time.perf_counter()
+                hits = pipeline.retrieve(q.question)
+                reusable = same_prompt(pipeline, hits, stored[q.id])
+                check = bool(reusable and check_every and pos % check_every == 0)
+                if reusable and not check:
+                    rec = reused_record(q, pipeline, hits, stored[q.id], args.reuse_from, time.perf_counter() - t_q)
+                    fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                    fh.flush()
+                    done[rec["id"]] = rec
+                    continue
+                answer = pipeline.answer_from(q.question, hits, t_q)
+            else:
+                answer = pipeline.answer(q.question)
             rec = answer_record(q, answer)
+            if check:
+                rec["reuse_check"] = answer.answer == stored[q.id]["answer"]
             cited = {n: answer.sources[n - 1].text for n in answer.cited}
             pending.append(pool.submit(judge_and_save, q, rec, cited))
             flush(block=False)
@@ -196,6 +232,8 @@ def main() -> None:
         "run": name, "version": args.version, "judge": f"{args.judge_backend}:{args.judge_model}",
         "judge_rubric": RUBRIC_VERSION, "answer_prompt": args.answer_prompt,
         "reused_from": args.reuse_from, "reused": sum("reused_from" in r for r in results),
+        "reuse_checked": sum("reuse_check" in r for r in results),
+        "reuse_check_identical": sum(bool(r.get("reuse_check")) for r in results),
         "llm_provider": get_settings().llm_provider,
         "llm_model": getattr(pipeline.llm, "model", None), "embed_model": get_settings().embed_model,
         "top_k": get_settings().top_k, "judge_failures": failed, "date": datetime.now().isoformat(timespec="seconds"),
