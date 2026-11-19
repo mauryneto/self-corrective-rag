@@ -21,6 +21,8 @@
   searching again. Retrieval does not depend on the model that answers, so this is how another
   answering model is measured on exactly the same passages (set it with ``OLLAMA_LLM_MODEL``).
   The latency of such a run is the model's time only.
+- ``PASSAGE_MIN_SCORE`` and ``PASSAGE_MAX`` (settings) cut the passages V3 and V4 put in the
+  prompt. With ``--reuse-from``, the questions the cut leaves untouched keep their stored answer.
 - If MLflow is installed, the run is logged to ``mlflow.db`` (parameters + summary metrics).
 """
 
@@ -111,7 +113,12 @@ def same_prompt(pipeline, hits, stored: dict) -> bool:
         return False  # that answer is a fixed refusal, the model never wrote it
     if hasattr(pipeline, "gate") and pipeline.gate(hits)["declined"]:
         return False
-    return [h.chunk_id for h in hits] == [s["chunk_id"] for s in stored["sources"]]
+    return [h.chunk_id for h in in_prompt(pipeline, hits)] == [s["chunk_id"] for s in stored["sources"]]
+
+
+def in_prompt(pipeline, hits):
+    """The retrieved passages the pipeline puts in the prompt (V3 and V4 can cut some)."""
+    return pipeline.select(hits) if hasattr(pipeline, "select") else hits
 
 
 def reused_record(q: Question, pipeline, hits, stored: dict, run: str, retrieval_s: float) -> dict:
@@ -122,7 +129,7 @@ def reused_record(q: Question, pipeline, hits, stored: dict, run: str, retrieval
     usage.add(CallRecord("generate", getattr(pipeline.llm, "model", ""), u["input_tokens"], u["output_tokens"],
                          u["llm_latency_s"]))
     trace = {"scope_gate": pipeline.gate(hits)} if hasattr(pipeline, "gate") else {}
-    answer = Answer(question=q.question, answer=stored["answer"], sources=hits, cited=stored["cited"],
+    answer = Answer(question=q.question, answer=stored["answer"], sources=in_prompt(pipeline, hits), cited=stored["cited"],
                     version=pipeline.version, latency_s=retrieval_s + u["llm_latency_s"], usage=usage,
                     retrieval_latency_s=retrieval_s, trace=trace)
     verdict = {k: stored[k] for k in ("verdict", "refused", "citations_supported", "judge_reasoning")}
@@ -267,7 +274,9 @@ def main() -> None:
         "reuse_check_identical": sum(bool(r.get("reuse_check")) for r in results),
         "llm_provider": get_settings().llm_provider,
         "llm_model": getattr(pipeline.llm, "model", None), "embed_model": get_settings().embed_model,
-        "top_k": get_settings().top_k, "judge_failures": failed, "date": datetime.now().isoformat(timespec="seconds"),
+        "top_k": get_settings().top_k, "passage_min_score": getattr(pipeline, "min_passage_score", None),
+        "max_passages": getattr(pipeline, "max_passages", None), "judge_failures": failed,
+        "date": datetime.now().isoformat(timespec="seconds"),
     }
     (RUNS_DIR / f"{name}.summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False, indent=1))

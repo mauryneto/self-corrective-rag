@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import time
 
+from rag.config import get_settings
 from rag.embeddings import OllamaEmbedder
 from rag.llm import LLM
 from rag.pipeline.v0 import Answer
@@ -41,18 +42,33 @@ class V3Pipeline(V1Pipeline):
 
     def __init__(self, store: Store | None = None, embedder: OllamaEmbedder | None = None,
                  llm: LLM | None = None, top_k: int | None = None, reranker=None,
-                 min_top_score: float = MIN_TOP_SCORE):
+                 min_top_score: float = MIN_TOP_SCORE, min_passage_score: float | None = None,
+                 max_passages: int | None = None):
         super().__init__(store=store, embedder=embedder, llm=llm, top_k=top_k, reranker=reranker)
         self.min_top_score = min_top_score
+        s = get_settings()
+        self.min_passage_score = s.passage_min_score if min_passage_score is None else min_passage_score
+        self.max_passages = s.passage_max if max_passages is None else max_passages
 
     def gate(self, hits: list[Hit]) -> dict:
         top = max((h.score for h in hits), default=0.0)
         return {"top_score": round(top, 4), "min_top_score": self.min_top_score, "declined": top < self.min_top_score}
 
+    def select(self, hits: list[Hit]) -> list[Hit]:
+        """The passages that go into the prompt, of the retrieved ones (best first). All of them
+        unless a passage cut is set; the best passage always stays."""
+        kept = hits
+        if self.min_passage_score is not None:
+            kept = [h for h in hits if h.score >= self.min_passage_score] or hits[:1]
+        return kept[: self.max_passages] if self.max_passages else kept
+
     def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None) -> Answer:
         trace = (trace or {}) | {"scope_gate": self.gate(hits)}
         if not trace["scope_gate"]["declined"]:
-            return super().answer_from(question, hits, t0, trace)
+            kept = self.select(hits)
+            if len(kept) < len(hits):
+                trace["passage_cut"] = {"kept": len(kept), "retrieved": len(hits)}
+            return super().answer_from(question, kept, t0, trace)
         elapsed = time.perf_counter() - t0
         # the passages stay in the record: they are what the retrieval metrics are computed on
         return Answer(question=question, answer=DECLINED, sources=hits, cited=[], version=self.version,

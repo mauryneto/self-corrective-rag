@@ -337,7 +337,8 @@ so it ran whole. Correct answers of 120:
 - **What the smaller model loses is mostly the handling of a crowded prompt.** With only the
   gold passages it is close to the 14B: 82 against 88, a difference the test does not
   separate from chance. With V1's other passages around them it drops to 75 while the 14B
-  stays at 88, and with V1's real retrieval to 58.
+  stays at 88, and with V1's real retrieval to 58. Cutting passages by the reranker's score
+  does not win this back (next section).
 - **So retrieval is worth more to the weaker model, and the reranker gave it less.** From V1
   to the ceiling the 7B gains 17 questions (p = 0.002), the 14B 10. But V0 → V1 is 55 → 58
   for the 7B (13 gained, 10 lost, p = 0.68) against 69 → 78 for the 14B: a better ranking of
@@ -364,6 +365,40 @@ so it ran whole. Correct answers of 120:
   the CPU, 35 of the 36 questions retrieved the same passages.
 - **The 7B is deterministic in this setup too.** 9 answers generated again in the V4 run and
   35 in the end-to-end sample came out identical to the stored ones.
+
+#### Fewer passages for the 7B: no gain
+
+If the 7B is thrown by the passages it should ignore, put fewer in the prompt. V3 and V4 got an
+optional cut (off by default): only the passages the reranker scores at least
+`PASSAGE_MIN_SCORE` go into the prompt, the best one always, and at most `PASSAGE_MAX`. Four
+cuts were run with the 7B on the passages V4 retrieved (runs `v4_7b_min03`, `_min05`, `_min07`,
+`_top3`); the questions a cut leaves untouched kept their stored answer.
+
+| Prompt | Passages, mean | Questions with every gold article in the prompt (of 120) | Correct (of 120) | Gained / lost vs all six | McNemar p | Declines (of 60) | Wrongful refusals | Citations supported |
+|---|---|---|---|---|---|---|---|---|
+| All six (V4) | 6.0 | 92 | 58 | | | 55 | 3 | 51% |
+| Score ≥ 0.3 | 3.8 | 88 | 58 | 5 / 5 | 1.00 | 50 | 4 | 48% |
+| Score ≥ 0.5 | 2.9 | 79 | 58 | 10 / 10 | 1.00 | 50 | 10 | 55% |
+| Score ≥ 0.7 | 2.3 | 74 | 55 | 10 / 13 | 0.68 | 51 | 13 | 59% |
+| Best three | 3.0 | 79 | 61 | 12 / 9 | 0.66 | 53 | 6 | 53% |
+
+- **No cut beats the six passages.** The best row, the best three, is 61 against 58 with 12
+  questions gained and 9 lost: not separable from chance.
+- **What the cut gives where the gold article stays, it takes where the article goes.** With
+  score ≥ 0.5, the 70 questions that lost only other passages gained 10 and lost 5; the 15
+  that lost a gold article gained none and lost 5.
+- **The reranker's score orders passages; it does not say which one answers.** Gold passages
+  score a median 0.91, the others 0.47, and a quarter of the others score above 0.77. A
+  threshold that drops no gold passage removes one in twenty of the others.
+- **Refusals get worse.** With the score cuts, five questions the norms do not answer are left
+  with a single passage, and the 7B answers from it instead of declining (55 → 50). Wrongful
+  refusals rise from 3 to 13 as the cut tightens.
+- **Citations improve a little** (51% → 59% at the tightest cut), which is the one thing fewer
+  passages did buy.
+- So the distance from 58 to the gold-only ceiling (82) is not reachable with the signal the
+  pipeline already has. It takes retrieval that finds the missing articles (28 of the 120
+  questions do not have all of them in the six) or a model that reads six passages well. The
+  cut stays in the code, off, so the runs can be reproduced.
 
 ### Retrieval ablation (V1 design)
 

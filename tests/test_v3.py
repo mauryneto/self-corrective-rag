@@ -55,6 +55,22 @@ def test_declines_without_calling_the_model_when_no_passage_is_about_the_questio
     assert a.latency_s == a.retrieval_latency_s
 
 
+def test_passage_cut_keeps_the_passages_above_the_score_and_always_the_best_one():
+    p = pipeline(V3Pipeline, [0.2, 0.9, 0.6], min_passage_score=0.5)
+    a = p.answer("Qual o prazo?")
+    assert [h.chunk_id for h in a.sources] == ["rn-566#2", "rn-566#3"]  # what the model saw and can cite
+    assert "texto 1" not in p.llm.calls[0][1] and a.trace["passage_cut"] == {"kept": 2, "retrieved": 3}
+    low = pipeline(V3Pipeline, [0.1, 0.3, 0.2], min_passage_score=0.5)
+    assert [h.chunk_id for h in low.answer("Qual o prazo?").sources] == ["rn-566#2"]
+    top = pipeline(V3Pipeline, [0.2, 0.9, 0.6], max_passages=1)
+    assert [h.chunk_id for h in top.answer("Qual o prazo?").sources] == ["rn-566#2"]
+
+
+def test_no_passage_is_cut_by_default():
+    a = pipeline(V3Pipeline, [0.2, 0.9, 0.06]).answer("Qual o prazo?")
+    assert len(a.sources) == 3 and "passage_cut" not in a.trace
+
+
 def test_answers_exactly_like_v1_when_a_passage_passes_the_gate():
     scores = [0.2, 0.9, 0.01]
     v3, v1 = pipeline(V3Pipeline, scores), pipeline(V1Pipeline, scores)

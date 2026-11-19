@@ -74,6 +74,16 @@ def test_an_answer_is_reused_only_when_the_prompt_would_be_the_same():
     assert not run.same_prompt(low, low.retrieve("Qual o prazo?"), stored())  # this version declines it
 
 
+def test_with_a_passage_cut_an_answer_is_reused_only_if_the_cut_removes_nothing():
+    cut = V4Pipeline(store=FakeStore(), embedder=FakeEmbedder(), llm=FakeLLM(), top_k=3,
+                     reranker=FakeReranker([0.2, 0.9, 0.5]), min_passage_score=0.4)
+    hits = cut.retrieve("Qual o prazo?")
+    assert not run.same_prompt(cut, hits, stored())  # the stored answer saw three passages, this prompt has two
+    assert run.same_prompt(cut, hits, stored(("rn-566#2", "rn-566#3")))
+    rec = run.reused_record(QUESTION, cut, hits, stored(("rn-566#2", "rn-566#3")), "old", retrieval_s=0.1)
+    assert [s["chunk_id"] for s in rec["sources"]] == ["rn-566#2", "rn-566#3"]
+
+
 def test_a_reused_record_keeps_the_answer_and_takes_this_runs_retrieval():
     p = pipeline()
     rec = run.reused_record(QUESTION, p, p.retrieve("Qual o prazo?"), stored(), "v3_repro", retrieval_s=0.4)

@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
 
     top_k: int = 6
+    # Passage cut (V3 and V4, off by default): of the retrieved passages, only those the reranker
+    # scores at least ``passage_min_score`` go into the prompt (the best one always does), and at
+    # most ``passage_max`` of them. An experiment for the smaller answering model, see the README.
+    passage_min_score: float | None = None
+    passage_max: int | None = None
 
     data_dir: Path = ROOT / "data"
 

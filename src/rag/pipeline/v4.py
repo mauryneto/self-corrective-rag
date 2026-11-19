@@ -29,12 +29,13 @@ class V4Pipeline(V3Pipeline):
 
     def __init__(self, store: Store | None = None, embedder: OllamaEmbedder | None = None,
                  llm: LLM | None = None, top_k: int | None = None, reranker=None,
-                 min_top_score: float = MIN_TOP_SCORE):
+                 min_top_score: float = MIN_TOP_SCORE, min_passage_score: float | None = None,
+                 max_passages: int | None = None):
         if reranker is None:
             from rag.rerank import fast_reranker
 
             reranker = fast_reranker()
         super().__init__(store=store, embedder=embedder, llm=llm, top_k=top_k, reranker=reranker,
-                         min_top_score=min_top_score)
+                         min_top_score=min_top_score, min_passage_score=min_passage_score, max_passages=max_passages)
         if getattr(self.llm, "num_ctx", 0) > NUM_CTX:  # local model only
             self.llm.num_ctx = NUM_CTX

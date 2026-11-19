@@ -77,10 +77,13 @@ per question.
 
 - The smaller model is close to the larger one when the prompt holds only the right passages
   and falls behind when other passages are around. Its weak spot is what to ignore.
-- That points at the prompt's content, not its ranking: fewer passages, or passages filtered
-  before the model sees them, are the next thing to try with the 7B. The score of the reranker
-  is already there (V3 uses it for the gate): a cut such as "keep the passages scoring above
-  x, at most six" costs nothing to run and can be measured on the stored runs first.
+- Fewer passages by the reranker's score was tried the same day (README, "Fewer passages for
+  the 7B") and gave nothing: 58 of 120 with all six, 55 to 61 with four different cuts, none
+  separable from chance. The score does not tell the passage that answers from its
+  neighbours, so every cut that removes distraction also removes gold articles.
+- What is left for the 7B: a filter that reads the passages (one cheap model call per passage,
+  "does this answer the question?"; the 7B is fast enough to afford it, cost not measured),
+  or the retrieval work for two-article questions, which helps both models.
 - Fine-tuning (idea 3) has a better case with the 7B than with the 14B: it fits in 8 GB for
   training and there is more to gain (58 of 120 correct in V1). Its failures have not been read
   one by one yet; that comes first, as it did for the 14B.
