@@ -400,6 +400,57 @@ cuts were run with the 7B on the passages V4 retrieved (runs `v4_7b_min03`, `_mi
   questions do not have all of them in the six) or a model that reads six passages well. The
   cut stays in the code, off, so the runs can be reproduced.
 
+#### How wrong the wrong answers are
+
+The tables count an answer as correct or not. The 42 answers the 14B does not get right in V4
+and the 62 of the 7B were read one by one, from the judge's reasoning, to see why each fails
+and how far from correct it is. The full reading, with the questions, is in
+[eval/error_reading.md](eval/error_reading.md); it is one reader's pass and changes no number
+above.
+
+| Why the answer is not correct | 14B | 7B |
+|---|---|---|
+| A gold article is not among the six passages | 22 | 27 |
+| Leaves out a condition, an exception or a part that is in the prompt | 10 | 14 |
+| Misreads or misapplies a passage that is in the prompt | 9 | 11 |
+| Adds a condition or a qualifier the norm does not have | 1 | 9 |
+| Declines with the answer in the prompt | 0 | 1 |
+
+| How far from correct (of 120) | 14B | 7B |
+|---|---|---|
+| Partial: what it says is right, something is missing | 22 | 23 |
+| Incorrect, the core is right and something wrong is stated with it | 11 | 23 |
+| Incorrect, the main conclusion is wrong | 5 | 13 |
+| Declined a question the norms answer | 4 | 3 |
+
+- **Most errors are near misses, in both models.** The yes or no, the deadline or the amount
+  the question asked for is wrong in 5 of the 120 answers of the 14B and in 13 of the 7B.
+- **Retrieval is the largest cause for both:** 28 of the 120 questions do not have every gold
+  article in the six passages, and they account for 22 and 27 of the errors.
+- **What the 7B adds is invention.** It leaves out and misreads a little more often than the
+  14B (25 answers against 19), but 9 of its answers add something the norm does not have,
+  against 1. Three of them turn a deadline in days into working days.
+- **The worst error is rare and the same in both.** Of the 60 questions the norms do not
+  answer, the 14B answers 4 with a rule the corpus does not have, the 7B the same four and one
+  more.
+
+A score that gives half a point to near misses, of 100, over the 180 questions. One point for
+a correct answer or a correct decline; 54 of the 7B's 55 declines count, because one states an
+invented rule before declining and the judge grades it incorrect:
+
+| Scoring | 14B | 7B |
+|---|---|---|
+| Correct only (the tables above) | 74.4 | 62.2 |
+| Half a point for a partial answer | 80.6 | 68.6 |
+| Half a point also for an incorrect answer with the core right | 83.6 | 75.0 |
+
+The tables keep "correct only". Half a point for a partial answer is a fair second reading,
+since nothing in a partial answer is wrong; it lifts both models six points and leaves the
+twelve between them. The third row is generous: "ten working days" where the norm says "ten
+days" has the core right and makes the person miss a deadline. That row also rests on the
+reader's split, and all three on the judge's line between partial and incorrect, the part of
+it that agrees least with human labels (Judge validation, below).
+
 ### Retrieval ablation (V1 design)
 
 Retrieval-only eval on the 120 answerable questions (`python -m rag.eval.retrieval_eval`; no
