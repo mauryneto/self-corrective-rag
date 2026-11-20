@@ -13,6 +13,11 @@ answer against the passages and rewrites it. Measured, the loop did not pay for 
 model, so the version that is served (V4) leaves it out. That result is in the table with the
 others.
 
+![The demo page answering a question that needs two norms](docs/demo.gif)
+
+*The demo page in real time: V4 with `qwen2.5:14b` on a laptop GPU (RTX 5070, 8 GB). The
+passages arrive in half a second, the first words in about 5 s, the whole answer in 24 s.*
+
 ## What was found
 
 Correct answers are out of the 120 answerable questions of the eval set.
