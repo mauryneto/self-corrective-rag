@@ -1,12 +1,18 @@
 """V0: naive RAG. Vector search, top-k chunks into the prompt, one generation call.
 
 This is the baseline every later version is measured against.
+
+``answer(question, on_event=f)`` reports what happens while it happens, for a client that shows
+the answer being written: ``f("sources", {...})`` when the passages are chosen, then
+``f("text", {"text": piece})`` for each piece of the answer. It is the same code path as without
+``on_event``, and returns the same ``Answer``.
 """
 
 from __future__ import annotations
 
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from rag.config import get_settings
@@ -17,6 +23,7 @@ from rag.pipeline.prompts import ANSWER_SYSTEM, answer_prompt
 from rag.store import Hit, Store
 
 CITATION_RE = re.compile(r"\[(\d+)\]")
+OnEvent = Callable[[str, dict], None]
 
 
 @dataclass
@@ -37,6 +44,12 @@ def cited_indexes(text: str, n_sources: int) -> list[int]:
     return sorted(i for i in found if 1 <= i <= n_sources)
 
 
+def streamed(on_event: OnEvent | None) -> dict:
+    """Keyword arguments for ``llm.complete``: with a listener, the text goes to it piece by piece
+    as "text" events; without one, nothing is added and the call is the one the eval measures."""
+    return {"on_text": lambda piece: on_event("text", {"text": piece})} if on_event else {}
+
+
 class V0Pipeline:
     version = "v0"
     answer_system = ANSWER_SYSTEM  # the eval runner can swap it (--answer-prompt)
@@ -51,17 +64,20 @@ class V0Pipeline:
     def retrieve(self, question: str) -> list[Hit]:
         return self.store.vector_search(self.embedder.embed_one(question), self.top_k)
 
-    def answer(self, question: str) -> Answer:
+    def answer(self, question: str, on_event: OnEvent | None = None) -> Answer:
         t0 = time.perf_counter()
-        return self.answer_from(question, self.retrieve(question), t0)
+        return self.answer_from(question, self.retrieve(question), t0, on_event=on_event)
 
-    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None) -> Answer:
+    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None,
+                    on_event: OnEvent | None = None) -> Answer:
         """The generation step, given the passages. ``t0``: when the question arrived."""
         t_retrieval = time.perf_counter() - t0
+        if on_event:
+            on_event("sources", {"hits": hits, "retrieval_latency_s": t_retrieval})
 
         usage = Usage()
         text, record = self.llm.complete(self.answer_system, answer_prompt(question, [h.text for h in hits]),
-                                         step="generate")
+                                         step="generate", **streamed(on_event))
         usage.add(record)
         return Answer(
             question=question,

@@ -11,6 +11,10 @@
 Both checks are structured outputs (JSON schema). If a check fails to parse, the pipeline carries
 on as if it had passed: a broken check must never cost an answer. ``Answer.trace`` records what
 each step did, including the first draft when it was rewritten, so the eval can measure each step.
+
+With ``on_event`` (see ``rag.pipeline.v0``), each step is announced as a "step" event before it
+starts. The draft is streamed as it is written; a "revise" step means the text sent so far is
+discarded and the rewritten answer follows.
 """
 
 from __future__ import annotations
@@ -30,7 +34,7 @@ from rag.pipeline.prompts import (
     revise_prompt,
     verify_prompt,
 )
-from rag.pipeline.v0 import Answer, cited_indexes
+from rag.pipeline.v0 import Answer, OnEvent, cited_indexes, streamed
 from rag.pipeline.v1 import V1Pipeline
 from rag.retrieval import Retriever
 from rag.store import Hit, Store
@@ -97,19 +101,28 @@ class V2Pipeline(V1Pipeline):
         return hits, trace
 
     # -- steps 3 and 4 --------------------------------------------------------------------------
-    def answer(self, question: str) -> Answer:
+    def answer(self, question: str, on_event: OnEvent | None = None) -> Answer:
+        def step(name: str) -> None:
+            if on_event:
+                on_event("step", {"name": name})
+
         t0 = time.perf_counter()
         usage = Usage()
+        step("check_context")
         hits, trace = self.gather(question, usage)
         t_retrieval = time.perf_counter() - t0
         texts = [h.text for h in hits]
+        if on_event:
+            on_event("sources", {"hits": hits, "retrieval_latency_s": t_retrieval})
 
-        text, record = self.llm.complete(self.answer_system, answer_prompt(question, texts), step="generate")
+        text, record = self.llm.complete(self.answer_system, answer_prompt(question, texts), step="generate",
+                                         **streamed(on_event))
         usage.add(record)
         text = text.strip()
 
         trace["answer_check"] = None
         if self.verify and cited_indexes(text, len(hits)):  # nothing to check in a refusal
+            step("check_answer")
             try:
                 check, record = self.llm.complete_json(VERIFY_SYSTEM, verify_prompt(question, texts, text),
                                                        AnswerCheck, step="check_answer")
@@ -118,8 +131,9 @@ class V2Pipeline(V1Pipeline):
                 check = None
             trace["answer_check"] = check.model_dump() if check else None
             if check and not check.supported and check.problems:
+                step("revise")
                 revised, record = self.llm.complete(self.answer_system, revise_prompt(question, texts, text, check.problems),
-                                                    step="revise")
+                                                    step="revise", **streamed(on_event))
                 usage.add(record)
                 trace["draft"] = text
                 trace["draft_cited"] = cited_indexes(text, len(hits))

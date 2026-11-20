@@ -1,17 +1,62 @@
 # self-corrective-rag
 
-A self-corrective RAG over Brazilian health-insurance regulation (normative acts of ANS, the
-national regulator). An LLM judge checks every answer; failed answers trigger query rewriting and
-decomposition; questions the corpus can't answer are declined. Every design choice is backed by an
-ablation on a fixed eval set, reporting accuracy, refusal precision, latency and cost per query.
+A RAG system over Brazilian health-insurance regulation (the normative resolutions of ANS, the
+national regulator), built in five versions and measured at each one. It answers in Portuguese
+with citations to the articles it used, declines what the norms do not answer, streams the
+answer as it is written, and runs on a laptop with a local 14B model. Each version is a row in
+an ablation on a fixed 180-question eval set, graded by an LLM judge validated against human
+labels: accuracy, refusals, latency and cost per question.
 
-> **Status: work in progress (week 3 of 4).** Corpus pipeline with incremental updates, a
-> 180-question eval set, a judge validated against human labels, and V0 (baseline), V1 (hybrid
-> search + reranker), V2 (self-corrective loop), V3 (scope gate) and V4 (reranker on the GPU)
-> measured in a reproducible setup: the same version run twice gives the same answers, so a
-> difference between rows comes from the version. Two reference rows (no retrieval, perfect
-> retrieval) bound what the architecture can add. The roadmap's versions are all measured, and
-> the whole table was run again with a model half the size (7B) to see what the model is worth.
+The name comes from the third version, a self-corrective loop: the model checks whether the
+retrieved passages cover the question, searches again for what is missing, then checks its own
+answer against the passages and rewrites it. Measured, the loop did not pay for itself with this
+model, so the version that is served (V4) leaves it out. That result is in the table with the
+others.
+
+## What was found
+
+Correct answers are out of the 120 answerable questions of the eval set.
+
+- **Retrieval does most of the work, and plain vector search does most of that.** 14 correct
+  with no retrieval, 69 with vector search (V0), 78 with hybrid search and a reranker (V1),
+  88 with perfect retrieval. V1 delivers 86% of what retrieval can give this model.
+- **The self-corrective loop gave nothing with a 14B model.** V2 gets 79 against V1's 78, at
+  1.3× the median latency and 2× the p95. Its answer check rewrote 31 answers and lost more
+  correct ones than it fixed.
+- **A gate on the reranker's score declines out-of-scope questions without calling the
+  model** (V3): 18 of 20, and no answerable question is lost.
+- **Latency went from 41 s to 25 s with the same answers** by moving the reranker to the GPU
+  (V4). Streaming then puts the first words on screen after 4.9 s.
+- **The measurement had to be made repeatable before any of this could be read.** A second
+  run of the same version used to disagree on most answers, and the cause was hardware, not
+  chance. Now the same version run twice gives identical answers, and every comparison is
+  paired per question and tested.
+- **The model is worth more than the architecture.** A 7B model answers in 3.7 s instead of
+  25 s and gets 58 right instead of 78; with the reranker it stays below the 14B with plain
+  vector search.
+- **Most wrong answers are near misses.** The main conclusion is wrong in 5 of the 14B's 120
+  answers. The largest cause of error is a needed article missing from the prompt (28
+  questions), which is where the next gain is.
+
+## How it works
+
+```mermaid
+flowchart LR
+    Q([Question]) --> V[Vector search<br/>bge-m3 + pgvector]
+    Q --> B[BM25<br/>Portuguese stems]
+    V --> F[Fusion<br/>30 candidates]
+    B --> F
+    F --> R[Cross-encoder reranker<br/>best 6 of 20]
+    R --> G{Best score<br/>below 0.05?}
+    G -- yes --> D([Declined<br/>no model call])
+    G -- no --> M[Local model<br/>answers from the 6 passages]
+    M --> A([Answer with citations<br/>streamed])
+```
+
+That is V4, the version the API serves. V0 is the same picture with vector search alone and
+no gate. V2 wraps the model's step in two checks by the same model (do the passages cover the
+question? does each claim rest on a cited passage?), with follow-up searches and one rewrite.
+The corpus is 240 norms cut by article into 4,270 passages, in Postgres.
 
 ## Results
 
@@ -273,8 +318,42 @@ model):
   with and without it loaded).
 - **Without a GPU** V4 falls back to the CPU reranker and is V3. Sorting the candidates by
   length would cut the CPU time from 8.4 s to 6.9 s with the same ranking; not included.
-- **Not done:** streaming the answer. The first words could be on screen about 5 s after the
-  question (0.5 s of retrieval, 4 s for the model to read the prompt) instead of 25 s.
+- **Streaming came next** (see "Streaming the answer"): the first words are on screen a few
+  seconds after the question instead of 25 s.
+
+### Streaming the answer
+
+`POST /ask/stream` sends the passages as soon as they are chosen and then the answer, piece by
+piece, as the model writes it (Server-Sent Events). It is `/ask`'s code path with a listener
+attached, not a second implementation. Measured on one eval question in five through the real
+V4 pipeline with `qwen2.5:14b` (`python -m rag.eval.stream_check`, run `v4_stream`):
+
+| V4 with `qwen2.5:14b`, 36 questions | |
+|---|---|
+| Answered by the model / declined by the gate | 32 / 4 |
+| Passages chosen, median | 0.5 s |
+| First words, median (p95) | 4.9 s (5.7 s) |
+| Whole answer, median (p95) | 22.1 s (41.3 s) |
+| Same text as the stored answer, generated without streaming | 35 of 35 |
+
+- **The wait before there is something to read drops from 22.1 s to 4.9 s.** What is left is
+  the model reading the prompt: a median 4.4 s between the passages and the first word.
+- **Streaming changes when the text arrives, not the text.** The 35 answers generated from
+  the same passages are identical, character for character, to the ones in the results
+  table, so the table's verdicts hold for what the demo shows. The other question retrieved
+  a different passage, because of where the embedding model ran (below).
+- **Not measured with the 7B,** whose whole answer already takes 3.7 s.
+- **A question the gate declines** has nothing to stream: the fixed refusal arrives with the
+  passages, in a median 0.4 s.
+- **How it was measured.** One question is answered before the sample, so no row pays for
+  loading a model. The embedding model ran on the CPU (`EMBED_NUM_GPU=0`): that day other
+  programs held 1.4 GB of the card, and the 14B, the reranker and the embedding model no
+  longer fit on it together. When they do not fit, Ollama reloads a model on every question:
+  the first words took 19 s and 23 s on the two questions tried that way. `ollama ps` shows
+  it.
+- **V2 streams too.** Its checks are announced as `step` events; when the answer check asks
+  for a rewrite, the client is told to discard the draft it has shown and the rewritten
+  answer follows.
 
 ### Experiment: a completeness rule in the answering prompt
 
@@ -495,18 +574,20 @@ partial / incorrect. Agreement is Cohen's kappa (< 0.4 weak, 0.4–0.6 moderate,
 - Files: `eval/judge_labels_initial.json`, `eval/judge_labels.json`, `eval/judge_validation*.json`;
   `python -m rag.eval.validate_judge` recomputes the numbers and lists every disagreement.
 
-## Roadmap
+## Versions
 
-| Version | What it adds | Status |
+| Version | What it adds | Result |
 |---|---|---|
 | V0 | Naive RAG: vector search only | ✅ |
 | V1 | Hybrid search (vector + BM25) and a cross-encoder reranker | ✅ |
 | V2 | Self-corrective loop: context check, query decomposition, answer check and rewrite | ✅ measured: no gain in correct answers over V1; the answer check trades accuracy for refusals |
 | V3 | Scope gate: decline before calling the model when no retrieved passage is about the question | ✅ measured: same answers as V1; out-of-scope questions are declined in 10 s instead of 31 s, with no LLM call |
 | V4 | Faster: where each model runs. Reranker on the GPU, generator's context sized to the prompt | ✅ measured: same answers as V3; median latency 41 s → 25 s. V2's checks are not in V3, so there was none to skip |
+| Streaming | `POST /ask/stream` and a demo page that shows the answer being written | ✅ measured: same answers; first words after 4.9 s instead of 22.1 s |
 
-Ideas beyond the roadmap (V2 with the completeness rule, fine-tuning the answering model) are
-in [IDEAS.md](IDEAS.md).
+All the planned versions are measured. What was not tried (V2 with the completeness rule,
+retrieval for two-article questions, a filter that reads each passage, fine-tuning the answering
+model) is in [IDEAS.md](IDEAS.md).
 
 ## Corpus
 
@@ -522,7 +603,7 @@ in [IDEAS.md](IDEAS.md).
 - **How it is read:** the portal is a JavaScript app, so a headless browser (Playwright) uses it
   the way a person would: the public list of norms and each norm's public page, one at a time.
 - **Licensing:** official acts are not protected by copyright in Brazil (Lei 9.610/98, art. 8º, IV).
-- **Coverage (Nov 2026):** 240 RNs in force, 4,124 chunks: 234 consolidated texts from the
+- **Coverage (Nov 2026):** 240 RNs in force, 4,270 chunks: 234 consolidated texts from the
   portal and 6 originals from the gazette. 14 norms have no text in either source (mostly from
   2002–2011); they are listed in `data/corpus/_changes.json` under `failed`. Norms the portal
   marks "Não vigente" (e.g. published but not yet in effect) are left out.
@@ -553,16 +634,33 @@ uv sync
 uv run playwright install chromium        # headless browser for the ANS portal
 uv run python -m rag.ingest.build_corpus   # ANS portal (consolidated texts) -> data/corpus/
 uv run python -m rag.index                 # chunk, embed, load into Postgres
-uv run uvicorn rag.api:app --reload        # POST /ask
+uv run uvicorn rag.api:app                 # the API on 127.0.0.1:8000
 ```
 
 ```bash
-curl -s localhost:8000/ask -H "content-type: application/json" \
+curl -s 127.0.0.1:8000/ask -H "content-type: application/json" \
   -d '{"question": "Qual o prazo máximo para atendimento de consulta básica?"}'
 ```
 
+`/ask` returns the answer, the passages it was given (which ones it cites, their reranker
+score, their text and a link to the norm), latency and token usage. `/ask/stream` takes the
+same body and sends Server-Sent Events while it works: `sources` when the passages are chosen,
+`text` for each piece of the answer, `done` with what `/ask` returns plus the time to the first
+words (`curl -N` shows them arriving).
+
+The demo page is a client of that endpoint. With the API running:
+
+```bash
+uv run --group demo streamlit run demo/app.py   # http://127.0.0.1:8501
+```
+
+It shows the passages, the answer as it is written, which passages the answer cites and how
+long each part took, for any of the five versions. Everything runs on your machine: the page
+needs the API, and the API needs the database and Ollama.
+
 To answer with Claude instead of a local model, set `LLM_PROVIDER=anthropic` and
-`ANTHROPIC_API_KEY` in `.env`. `OLLAMA_LLM_MODEL` picks the local model (`qwen2.5:14b` in the
+`ANTHROPIC_API_KEY` in `.env` (that backend does not stream yet: `/ask/stream` sends its answer
+in one piece). `OLLAMA_LLM_MODEL` picks the local model (`qwen2.5:14b` in the
 results table; `qwen2.5:7b` answers in 4 s instead of 25 s and gets fewer answers right, see
 "A smaller answering model").
 
@@ -629,6 +727,9 @@ validated against human labels (see Judge validation).
 - **Bound the question before answering it.** A floor (no retrieval) and a ceiling (gold
   passages) turn "V1 is better than V0" into "V1 delivers 86% of what retrieval can give this
   model", and show when the next gain has to come from somewhere else.
+- **One code path for the answer, streamed or not.** Streaming is a listener passed to the
+  same pipeline call the eval measures, and the demo is a client of the API. What is on screen
+  is what was graded: the streamed answers were compared with the stored ones, text for text.
 - **Local embeddings.** `bge-m3` is multilingual and runs locally through Ollama: re-indexing
   costs nothing and the eval's cost numbers only reflect the LLM calls.
 - **Provider-agnostic LLM layer.** Every call records tokens, latency and estimated cost, so the

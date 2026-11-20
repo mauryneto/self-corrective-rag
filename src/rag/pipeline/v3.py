@@ -28,7 +28,7 @@ import time
 from rag.config import get_settings
 from rag.embeddings import OllamaEmbedder
 from rag.llm import LLM
-from rag.pipeline.v0 import Answer
+from rag.pipeline.v0 import Answer, OnEvent
 from rag.pipeline.v1 import V1Pipeline
 from rag.store import Hit, Store
 
@@ -62,14 +62,18 @@ class V3Pipeline(V1Pipeline):
             kept = [h for h in hits if h.score >= self.min_passage_score] or hits[:1]
         return kept[: self.max_passages] if self.max_passages else kept
 
-    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None) -> Answer:
+    def answer_from(self, question: str, hits: list[Hit], t0: float, trace: dict | None = None,
+                    on_event: OnEvent | None = None) -> Answer:
         trace = (trace or {}) | {"scope_gate": self.gate(hits)}
         if not trace["scope_gate"]["declined"]:
             kept = self.select(hits)
             if len(kept) < len(hits):
                 trace["passage_cut"] = {"kept": len(kept), "retrieved": len(hits)}
-            return super().answer_from(question, kept, t0, trace)
+            return super().answer_from(question, kept, t0, trace, on_event)
         elapsed = time.perf_counter() - t0
+        if on_event:
+            on_event("sources", {"hits": hits, "retrieval_latency_s": elapsed, "declined": True})
+            on_event("text", {"text": DECLINED})
         # the passages stay in the record: they are what the retrieval metrics are computed on
         return Answer(question=question, answer=DECLINED, sources=hits, cited=[], version=self.version,
                       latency_s=elapsed, retrieval_latency_s=elapsed, trace=trace)

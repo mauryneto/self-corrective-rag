@@ -68,3 +68,9 @@ def test_ask_endpoint(monkeypatch):
 def test_ask_rejects_empty_question(monkeypatch):
     monkeypatch.setattr(api, "get_pipeline", lambda version="v1": make_pipeline())
     assert TestClient(api.app).post("/ask", json={"question": ""}).status_code == 422
+
+
+def test_health_reports_the_index_and_the_answering_model(monkeypatch):
+    monkeypatch.setattr(api, "get_pipeline", lambda version="v1": make_pipeline())
+    assert TestClient(api.app).get("/health").json() == {
+        "status": "ok", "chunks": 2, "norms": 1, "model": "claude-haiku-5-5"}

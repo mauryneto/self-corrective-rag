@@ -2,11 +2,17 @@
 
 Every call returns the text plus a ``CallRecord`` (tokens, latency, model), which the pipeline
 aggregates into the per-question cost and latency reported by the eval.
+
+``complete(..., on_text=f)`` streams: ``f`` gets each piece of the answer as the model writes it,
+and the call still returns the whole text and its record. Without ``on_text`` the request is the
+one the eval measures.
 """
 
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import Callable
 from typing import Protocol
 
 import httpx
@@ -16,15 +22,22 @@ from rag.config import get_settings
 from rag.costs import CallRecord
 from rag.retry import with_retries
 
+OnText = Callable[[str], None]
+
 
 class LLMRefusal(RuntimeError):
     """The model declined to answer (Claude ``stop_reason == "refusal"``)."""
 
 
+class StreamInterrupted(RuntimeError):
+    """A streamed answer stopped after part of it had been sent on: retrying would repeat that part."""
+
+
 class LLM(Protocol):
     model: str
 
-    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]: ...
+    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048,
+                 on_text: OnText | None = None) -> tuple[str, CallRecord]: ...
 
     def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
                                     max_tokens: int = 1024) -> tuple[M, CallRecord]: ...
@@ -59,11 +72,37 @@ class OllamaLLM:
             "options": self._options(1)})
         resp.raise_for_status()
 
-    def _chat(self, system: str, prompt: str, step: str, max_tokens: int, fmt: dict | None) -> tuple[str, CallRecord]:
+    def _stream(self, body: dict, on_text: OnText) -> dict:
+        """The request with ``stream: true``. Each piece of text goes to ``on_text`` as it arrives;
+        returns what the non-streamed request returns (the whole message and the token counts)."""
+        pieces: list[str] = []
+        try:
+            with self.client.stream("POST", f"{self.url}/api/chat", json=body) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    part = json.loads(line)
+                    if "error" in part:
+                        raise StreamInterrupted(str(part["error"]))
+                    piece = part.get("message", {}).get("content", "")
+                    if piece:
+                        pieces.append(piece)
+                        on_text(piece)
+                    if part.get("done"):
+                        return part | {"message": {"content": "".join(pieces)}}
+        except httpx.HTTPError as exc:
+            if pieces:  # not transient any more: the caller already has the start of the answer
+                raise StreamInterrupted(f"{type(exc).__name__}: {exc}") from exc
+            raise
+        raise StreamInterrupted("the stream ended before the final message")
+
+    def _chat(self, system: str, prompt: str, step: str, max_tokens: int, fmt: dict | None,
+              on_text: OnText | None = None) -> tuple[str, CallRecord]:
         t0 = time.perf_counter()
         body = {
             "model": self.model,
-            "stream": False,
+            "stream": on_text is not None,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
             "options": self._options(max_tokens),
         }
@@ -73,6 +112,8 @@ class OllamaLLM:
         def call() -> dict:
             if self.reproducible:
                 self._reset_cache()
+            if on_text is not None:
+                return self._stream(body, on_text)
             resp = self.client.post(f"{self.url}/api/chat", json=body)
             resp.raise_for_status()
             return resp.json()
@@ -87,8 +128,9 @@ class OllamaLLM:
         )
         return data["message"]["content"], record
 
-    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048) -> tuple[str, CallRecord]:
-        return self._chat(system, prompt, step, max_tokens, None)
+    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 2048,
+                 on_text: OnText | None = None) -> tuple[str, CallRecord]:
+        return self._chat(system, prompt, step, max_tokens, None, on_text)
 
     def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
                                     max_tokens: int = 1024) -> tuple[M, CallRecord]:
@@ -104,7 +146,9 @@ class AnthropicLLM:
         self.effort = effort
         self.client = anthropic.Anthropic()  # credentials from ANTHROPIC_API_KEY or an `ant auth` profile
 
-    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 16000) -> tuple[str, CallRecord]:
+    def complete(self, system: str, prompt: str, step: str, max_tokens: int = 16000,
+                 on_text: OnText | None = None) -> tuple[str, CallRecord]:
+        """Not streamed: with ``on_text``, the answer is handed over in one piece when it is ready."""
         t0 = time.perf_counter()
         # Server-side fallbacks: if the model declines on policy grounds, the API re-runs the request
         # on a fallback model chosen by refusal category, inside the same call.
@@ -128,6 +172,8 @@ class AnthropicLLM:
         if response.stop_reason == "refusal":
             raise LLMRefusal(getattr(response.stop_details, "category", None) or "refusal")
         text = "".join(b.text for b in response.content if b.type == "text")
+        if on_text is not None:
+            on_text(text)
         return text, record
 
     def complete_json[M: BaseModel](self, system: str, prompt: str, schema: type[M], step: str,
