@@ -1,6 +1,6 @@
 # Brief: writing eval questions for the ANS RAG
 
-Project: `C:\Users\maury\Desktop\maury\self-corrective-rag` — a RAG that answers questions about
+Project: this repository (`self-corrective-rag`) — a RAG that answers questions about
 Brazilian health-insurance regulation (Resoluções Normativas, "RNs", of the ANS). We are building
 the eval set that will score every version of the pipeline. Quality matters more than speed: a
 wrong reference answer poisons every future measurement.
@@ -48,7 +48,7 @@ wrong reference answer poisons every future measurement.
   annexes not in the corpus) and do not rely on annex tables.
 - Every fact in a reference answer must come from the corpus text you read, never from memory.
 - Check your work: run
-  `C:\Users\maury\Desktop\maury\self-corrective-rag\.venv\Scripts\python.exe -m rag.eval.check_questions --file <your file>`
+  `uv run python -m rag.eval.check_questions --file <your file>`
   from the project folder and fix every ERROR until it reports 0 errors. Unanswerable WARNs mean
   a term appears in the corpus: read those hits and drop or rewrite the question if the corpus
   actually answers it.
